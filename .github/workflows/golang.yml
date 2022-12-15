@@ -1,0 +1,76 @@
+name: GoLang Continuous Integration and Deployment
+on:
+  workflow_call:
+    inputs:
+      environment:
+        type: string
+        required: true
+      with-tests:
+        required: true
+        type: string
+      push:
+        required: true
+        type: string
+      update-tag:
+        required: true
+        type: string
+    secrets:
+      github-token:
+        required: true
+jobs:
+  golang:
+    name: Setup, Build, Test, Publish
+    runs-on: self-hosted
+    steps:
+      - name: Checkout Repository
+        # actions/checkout@v3.1.0
+        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
+        with:
+          token: ${{ secrets.github-token }}
+      - name: Checkout GitHub Shared Repository
+        # actions/checkout@v3.1.0
+        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
+        with:
+          repository: shpeliving/gh-shared-workflows
+          token: ${{ secrets.github-token }}
+          path: .github/gh-shared-workflows
+          # TODO: tag this later
+          ref: main
+      - name: Build Container Image
+        uses: ./.github/gh-shared-workflows/.github/actions/docker/build
+        id: docker-build
+        with:
+          environment: ${{ inputs.environment }}
+          github-token: ${{ secrets.github-token }}
+          with-cache: "false"
+      - name: Test Reporter
+        uses: ./.github/gh-shared-workflows/.github/actions/golang/test-reporter
+        with:
+          test-results-directory: ${{ steps.docker-build.outputs.test-results-directory }}
+        if: inputs.with-tests == 'true'
+      - name: Golang Security Scan
+        uses: ./.github/gh-shared-workflows/.github/actions/golang/security-scan
+        id: golang-security-scan
+        with:
+          test-results-directory: ${{ steps.docker-build.outputs.test-results-directory }}
+        if: inputs.with-tests == 'true'
+      - name: Container Image Vulnerability Scan
+        uses: ./.github/gh-shared-workflows/.github/actions/docker/vulnerability-scan
+        id: docker-vulnerability-scan
+        with:
+          image-ref: ${{ steps.docker-build.outputs.image-name }}
+        if: inputs.with-tests == 'true'
+      - name: Security Review Comment
+        uses: ./.github/gh-shared-workflows/.github/actions/comment
+        with:
+          pull-request-number: ${{ github.event.pull_request.number }}
+          golang-security-scan: ${{ steps.golang-security-scan.outputs.results }}
+          docker-vulnerability-scan: ${{ steps.docker-vulnerability-scan.outputs.results }}
+        if: inputs.with-tests == 'true'
+      - name: Push Container Image
+        uses: ./.github/gh-shared-workflows/.github/actions/docker/push
+        with:
+          environment: ${{ inputs.environment }}
+          image-ref: ${{ steps.docker-build.outputs.image-name }}
+          update-tag: ${{ inputs.update-tag }}
+        if: inputs.push == 'true'

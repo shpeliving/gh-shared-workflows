@@ -1,0 +1,30 @@
+name: Push Container Image
+description: Push Container Image
+inputs:
+  environment:
+    description: The environment you are about to deploy to (usually dev or live)
+    required: true
+  image-ref:
+    description: The name of the built container image
+    required: true
+  update-tag:
+    description: Update the tag in the helm charts and commit it
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Push
+      run: docker push ${{ inputs.image-ref }}
+      shell: bash
+    - name: Update Image Tag
+      run: yq eval -i ".image.tag = \"${GITHUB_SHA}\"" .deployment/chart/values-${{ inputs.environment }}.yaml
+      shell: bash
+      if: inputs.update-tag == 'true'
+    - name: Commit Image Tag Update
+      # stefanzweifel/git-auto-commit-action@v4.16.0
+      uses: stefanzweifel/git-auto-commit-action@3ea6ae190baf489ba007f7c92608f33ce20ef04a
+      with:
+        commit_message: Update image tag in ${{ inputs.environment }} helm values
+        file_pattern: '.deployment/chart/*.yaml'
+        branch: main
+      if: inputs.update-tag == 'true'

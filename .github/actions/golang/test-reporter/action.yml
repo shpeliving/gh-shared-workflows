@@ -1,0 +1,29 @@
+name: Test Reporter
+description: Shows test results in GitHub UI
+inputs:
+  test-results-directory:
+    description: The test results output directory
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Upload Test Results
+      # actions/upload-artifact@v3.1.1
+      uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb
+      with:
+        name: test-results
+        path: ${{ inputs.test-results-directory }}/test-results-junit.xml
+    - name: Upload Test Coverage
+      # actions/upload-artifact@v3.1.1
+      uses: actions/upload-artifact@83fd05a356d7e2593de66fc9913b3002723633cb
+      with:
+        name: test-results
+        path: ${{ inputs.test-results-directory }}/test-coverage.html
+    - name: Publish Test Results
+      # dorny/test-reporter@v1.6.0
+      uses: dorny/test-reporter@c9b3d0e2bd2a4e96aaf424dbaa31c46b42318226
+      with:
+        name: GoLang Tests
+        path: ${{ inputs.test-results-directory }}/test-results-junit.xml
+        reporter: java-junit
+        fail-on-error: "true"

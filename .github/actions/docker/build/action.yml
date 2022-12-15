@@ -1,0 +1,70 @@
+name: Build Container Image
+description: Build Container Image
+inputs:
+  environment:
+    description: The environment you are about to build and deploy to (usually dev or live)
+    required: true
+  github-token:
+    description: The GitHub token used for accessing internal repositories
+    required: true
+  dockerfile:
+    description: The path to the Dockerfile
+    default: .deployment/docker/Dockerfile
+  build-path:
+    description: The path where docker build should run against
+    default: .
+  with-cache:
+    description: If a docker build cache should be used or not
+    default: "true"
+outputs:
+  image-name:
+    description: The name of the built container image
+    value: ${{ steps.info.outputs.full-name }}
+  test-results-directory:
+    description: The test results output directory
+    value: ${{ steps.info.outputs.test-results-directory }}
+runs:
+  using: composite
+  steps:
+    - name: Extract Container Image Info
+      id: info
+      run: extract-image-info.sh ${{ inputs.environment }}
+      shell: bash
+    - name: Setup Docker Buildx
+      run: |
+        docker context create builders || true
+        docker buildx create \
+          --name builder-${GITHUB_SHA} \
+          --driver docker-container \
+          --config ${HOME}/.config/buildkit/buildkitd.toml \
+          --use \
+          --bootstrap \
+          builders
+      shell: bash
+    - name: Build
+      run: |
+        DOCKER_ARGS=()
+        if [[ "${{ inputs.with-cache }}" == "true" ]]; then
+          DOCKER_ARGS=(
+            --cache-to "type=registry,ref=docker-registry:5000/${{ steps.info.outputs.name }}:cache,mode=max"
+            --cache-from "type=registry,ref=docker-registry:5000/${{ steps.info.outputs.name }}:cache"
+          )
+        fi
+
+        docker buildx build \
+          --build-arg=GITHUB_TOKEN=${{ inputs.github-token }} \
+          -f "${{ inputs.dockerfile }}" \
+          -t "${{ steps.info.outputs.full-name }}" \
+          "${DOCKER_ARGS[@]}" \
+          --load \
+          "${{ inputs.build-path }}"
+      shell: bash
+    - name: Extract Test Results
+      run: |
+        docker buildx build \
+          --build-arg=GITHUB_TOKEN=${{ inputs.github-token }} \
+          -f "${{ inputs.dockerfile }}" \
+          --target ${{ steps.info.outputs.test-results-target }} \
+          --output type=local,dest=${{ steps.info.outputs.test-results-directory }} \
+          "${{ inputs.build-path }}"
+      shell: bash

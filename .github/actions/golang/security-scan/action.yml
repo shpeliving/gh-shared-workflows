@@ -1,0 +1,27 @@
+name: Golang Security Scan
+description: Scans Golang Code for Security Issues
+inputs:
+  test-results-directory:
+    description: The test results output directory
+    required: true
+outputs:
+  results:
+    description: Golang security scan results in markdown
+    value: ${{ steps.results.outputs.markdown }}
+runs:
+  using: composite
+  steps:
+    - name: Read Gosec Results
+      id: results
+      run: |
+        if [ -s ${{ inputs.test-results-directory }}/gosec.results ]; then
+          echo 'markdown<<EOF' >> $GITHUB_OUTPUT
+          echo ':bangbang: ' >> $GITHUB_OUTPUT
+          echo '```' >> $GITHUB_OUTPUT
+          cat ${{ inputs.test-results-directory }}/gosec.results >> $GITHUB_OUTPUT
+          echo '```' >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+        else
+          echo 'markdown=:heavy_check_mark:' >> $GITHUB_OUTPUT
+        fi
+      shell: bash
