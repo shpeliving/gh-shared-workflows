@@ -4,6 +4,9 @@ inputs:
   environment:
     description: The environment you are about to deploy to (usually dev or live)
     required: true
+  image-version:
+    description: The version of the image
+    required: true
   image-ref:
     description: The name of the built container image
     required: true
@@ -17,7 +20,7 @@ runs:
       run: docker push ${{ inputs.image-ref }}
       shell: bash
     - name: Update Image Tag
-      run: yq eval -i ".image.tag = \"${GITHUB_SHA}\"" .deployment/chart/values-${{ inputs.environment }}.yaml
+      run: yq eval -i ".image.tag = \"${{ inputs.image-version }}\"" .deployment/chart/values-${{ inputs.environment }}.yaml
       shell: bash
       if: inputs.update-tag == 'true'
     - name: Commit Image Tag Update

@@ -16,6 +16,9 @@ inputs:
   with-cache:
     description: If a docker build cache should be used or not
     default: "true"
+  image-version:
+    description: The version of the image
+    required: true
 outputs:
   image-name:
     description: The name of the built container image
@@ -28,7 +31,7 @@ runs:
   steps:
     - name: Extract Container Image Info
       id: info
-      run: extract-image-info.sh ${{ inputs.environment }}
+      run: extract-image-info.sh ${{ inputs.environment }} ${{ inputs.image-version }}
       shell: bash
     - name: Setup Docker Buildx
       run: |
