@@ -4,6 +4,9 @@ inputs:
   test-results-directory:
     description: The test results output directory
     required: true
+  github-token:
+    description: The GitHub token used for accessing internal repositories
+    required: true
 runs:
   using: composite
   steps:
@@ -27,3 +30,4 @@ runs:
         path: ${{ inputs.test-results-directory }}/test-results-junit.xml
         reporter: java-junit
         fail-on-error: "true"
+        token: ${{ inputs.github-token }}
