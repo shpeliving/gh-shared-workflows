@@ -25,6 +25,7 @@ runs:
     - name: Publish Test Results
       # EnricoMi/publish-unit-test-result-action@v2.6.0
       uses: EnricoMi/publish-unit-test-result-action@4663c0681217ca1df7425ca7dd9c47ddbdda716e
+      if: ${{ github.actor != 'dependabot[bot]' }}
       with:
         files: |
           ${{ inputs.test-results-directory }}/test-results-junit.xml
