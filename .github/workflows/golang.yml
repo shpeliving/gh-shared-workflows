@@ -51,7 +51,6 @@ jobs:
         uses: ./.github/gh-shared-workflows/.github/actions/golang/test-reporter
         with:
           test-results-directory: ${{ steps.docker-build.outputs.test-results-directory }}
-          github-token: ${{ secrets.github-token }}
         if: inputs.with-tests == 'true'
       - name: Golang Security Scan
         uses: ./.github/gh-shared-workflows/.github/actions/golang/security-scan

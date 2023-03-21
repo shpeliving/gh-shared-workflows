@@ -4,9 +4,6 @@ inputs:
   test-results-directory:
     description: The test results output directory
     required: true
-  github-token:
-    description: The GitHub token used for accessing internal repositories
-    required: true
 runs:
   using: composite
   steps:
@@ -33,4 +30,3 @@ runs:
         comment_title: GoLang Tests
         compare_to_earlier_commit: false
         action_fail: true
-        github_token: ${{ inputs.github-token }}
