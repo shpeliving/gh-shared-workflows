@@ -10,6 +10,9 @@ inputs:
   docker-vulnerability-scan:
     description:  Container image vulnerability scan results
     required: true
+  github-token:
+    description: The GitHub token used for accessing internal repositories
+    required: true
 runs:
   using: composite
   steps:
@@ -32,3 +35,4 @@ runs:
           ### GoLang: ${{ inputs.golang-security-scan }}
           ### Container Image: ${{ inputs.docker-vulnerability-scan }}
         edit-mode: replace
+        token: ${{ inputs.github-token }}

@@ -70,6 +70,7 @@ jobs:
           pull-request-number: ${{ github.event.pull_request.number }}
           golang-security-scan: ${{ steps.golang-security-scan.outputs.results }}
           docker-vulnerability-scan: ${{ steps.docker-vulnerability-scan.outputs.results }}
+          github-token: ${{ secrets.github-token }}
         if: inputs.with-tests == 'true'
       - name: Push Container Image
         uses: ./.github/gh-shared-workflows/.github/actions/docker/push
