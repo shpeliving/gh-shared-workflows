@@ -37,7 +37,7 @@ runs:
         # if there are any invalid files throw an error
         if [ $invalidFiles -gt 0 ]
         then
-          echo "Number of invalid files:" $invalidFiles
+          echo "Number of invalid files: $invalidFiles"
           exit 1
         fi
       shell: bash
