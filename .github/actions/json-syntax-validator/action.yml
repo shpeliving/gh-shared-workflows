@@ -15,7 +15,7 @@ runs:
         files=($(echo ${{ inputs.paths }} | tr "," "\n"))
 
         # count of the invalid files
-        invalidFiles=0
+        invalidFilesCount=0
 
         for file in "${files[@]}"
         do
