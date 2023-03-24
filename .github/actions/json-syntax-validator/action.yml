@@ -23,7 +23,7 @@ runs:
           jq empty $file
 
           # if the JSON content of the file is not valid increase the counter
-          if [ "$?" -ne 0 ]
+          if [ $? -ne 0 ]
           then
             invalidFiles=$((invalidFiles+1))
             echo ">>>Failed"
