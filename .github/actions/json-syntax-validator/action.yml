@@ -19,7 +19,7 @@ runs:
 
         for file in "${files[@]}"
         do
-          echo "Validating file:" $file
+          echo "Validating file: $file"
           jq empty $file
 
           # if the JSON content of the file is not valid increase the counter
