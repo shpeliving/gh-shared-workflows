@@ -10,6 +10,9 @@ inputs:
   dockerfile:
     description: The path to the Dockerfile
     default: .deployment/docker/Dockerfile
+  custom-image-name:
+    description: Custom image name
+    required: false
   build-path:
     description: The path where docker build should run against
     default: .
@@ -32,6 +35,8 @@ runs:
     - name: Extract Container Image Info
       id: info
       run: extract-image-info.sh ${{ inputs.environment }} ${{ inputs.image-version }}
+      env:
+        CUSTOM_IMAGE_NAME: ${{ inputs.custom-image-name }}
       shell: bash
     - name: Setup Docker Buildx
       run: |

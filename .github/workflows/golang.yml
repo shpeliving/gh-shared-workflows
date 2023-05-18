@@ -5,6 +5,12 @@ on:
       environment:
         type: string
         required: true
+      dockerfile:
+        type: string
+        required: false
+      custom-image-name:
+        type: string
+        required: false
       with-tests:
         required: true
         type: string
@@ -47,6 +53,9 @@ jobs:
           github-token: ${{ secrets.github-token }}
           with-cache: "false"
           image-version: ${{ inputs.image-version }}
+          dockerfile: ${{ inputs.dockerfile }}
+          custom-image-name: ${{ inputs.custom-image-name }}
+
       - name: Test Reporter
         uses: ./.github/gh-shared-workflows/.github/actions/golang/test-reporter
         with:
