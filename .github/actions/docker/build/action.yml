@@ -13,6 +13,9 @@ inputs:
   custom-image-name:
     description: Custom image name
     required: false
+  values-directory-path:
+    description: Values directory path
+    required: false
   build-path:
     description: The path where docker build should run against
     default: .
@@ -37,6 +40,7 @@ runs:
       run: extract-image-info.sh ${{ inputs.environment }} ${{ inputs.image-version }}
       env:
         CUSTOM_IMAGE_NAME: ${{ inputs.custom-image-name }}
+        VALUES_DIRECTORY_PATH: ${{ inputs.values-directory-path }}
       shell: bash
     - name: Setup Docker Buildx
       run: |

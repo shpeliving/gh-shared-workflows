@@ -11,6 +11,9 @@ on:
       custom-image-name:
         type: string
         required: false
+      values-directory-path:
+        type: string
+        required: false
       with-tests:
         required: true
         type: string
@@ -55,6 +58,7 @@ jobs:
           image-version: ${{ inputs.image-version }}
           dockerfile: ${{ inputs.dockerfile }}
           custom-image-name: ${{ inputs.custom-image-name }}
+          values-directory-path: ${{ inputs.values-directory-path }}
 
       - name: Test Reporter
         uses: ./.github/gh-shared-workflows/.github/actions/golang/test-reporter
