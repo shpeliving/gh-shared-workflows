@@ -92,4 +92,5 @@ jobs:
           image-ref: ${{ steps.docker-build.outputs.image-name }}
           update-tag: ${{ inputs.update-tag }}
           image-version: ${{ inputs.image-version }}
+          values-directory-path: ${{inputs.values-directory-path}}
         if: inputs.push == 'true'

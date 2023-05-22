@@ -13,6 +13,9 @@ inputs:
   update-tag:
     description: Update the tag in the helm charts and commit it
     required: true
+  values-directory-path:
+    description: Custom values directory path
+    required: false
 runs:
   using: composite
   steps:
@@ -28,6 +31,6 @@ runs:
       uses: stefanzweifel/git-auto-commit-action@3ea6ae190baf489ba007f7c92608f33ce20ef04a
       with:
         commit_message: Update image tag in ${{ inputs.environment }} helm values
-        file_pattern: '.deployment/chart/*.yaml'
+        file_pattern: ${{ inputs.values-directory-path || '.deployment/chart' }}/*.yaml
         branch: main
       if: inputs.update-tag == 'true'
