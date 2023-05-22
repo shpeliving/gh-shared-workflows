@@ -61,7 +61,7 @@ runs:
 
         docker buildx build \
           --build-arg=GITHUB_TOKEN=${{ inputs.github-token }} \
-          -f "${{ inputs.dockerfile.default }}" \
+          -f "${{ inputs.dockerfile || '.deployment/docker/Dockerfile' }}" \
           -t "${{ steps.info.outputs.full-name }}" \
           "${DOCKER_ARGS[@]}" \
           --load \
@@ -71,7 +71,7 @@ runs:
       run: |
         docker buildx build \
           --build-arg=GITHUB_TOKEN=${{ inputs.github-token }} \
-          -f "${{ inputs.dockerfile.default }}" \
+          -f "${{ inputs.dockerfile || '.deployment/docker/Dockerfile' }}" \
           --target ${{ steps.info.outputs.test-results-target }} \
           --output type=local,dest=${{ steps.info.outputs.test-results-directory }} \
           "${{ inputs.build-path }}"
