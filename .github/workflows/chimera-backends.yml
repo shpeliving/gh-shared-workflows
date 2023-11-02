@@ -1,0 +1,72 @@
+name: Chimera Backends Continuous Integration and Deployment
+on:
+  workflow_call:
+    inputs:
+      builder-dockerfile:
+        type: string
+        required: true
+        description: The path to the builder Dockerfile
+      builder-tag:
+        type: string
+        description: The expected builder tag
+        required: true
+      source-directories:
+        type: string
+        required: true
+        description: The directories which affect the building process (they are used for sparse checkout)
+      backends-directory:
+        type: string
+        required: true
+        description: The directory to scan for backend apps (should be included in source-directories)
+      image-repository:
+        type: string
+        required: true
+        description: The docker repository you are about to push the docker images to
+      image-version:
+        type: string
+        required: true
+        description: The version of the docker images
+      project-id:
+        type: string
+        required: true
+        description: The google cloud project ID
+      environment:
+        type: string
+        required: true
+        description: The environment you are about to deploy to (dev or live)
+    secrets:
+      github-token:
+        required: true
+        description: The GitHub token used for accessing internal repositories
+jobs:
+  build-apps:
+    name: Build apps
+    runs-on: self-hosted
+    steps:
+      - name: Checkout Repository
+        # actions/checkout@v4.1.1
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        with:
+          token: ${{ secrets.github-token }}
+          sparse-checkout: ${{ inputs.source-directories }}
+      - name: Checkout GitHub Shared Repository
+        # actions/checkout@v4.1.1
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        with:
+          repository: shpeliving/gh-shared-workflows
+          token: ${{ secrets.github-token }}
+          path: .github/gh-shared-workflows
+          # TODO: tag this later
+          ref: main
+      - name: Deploy Chimera Apps
+        uses: ./.github/gh-shared-workflows/.github/actions/chimera/build-deploy-apps
+        id: docker-build
+        with:
+          github-token: ${{ secrets.github-token }}
+          builder-dockerfile: ${{ inputs.builder-dockerfile }}
+          builder-tag: ${{ inputs.builder-tag }}
+          backends-directory: ${{ inputs.backends-directory }}
+          image-repository: ${{ inputs.image-repository }}
+          image-version: ${{ inputs.image-version }}
+          project-id: ${{ inputs.project-id }}
+          environment: ${{ inputs.environment }}

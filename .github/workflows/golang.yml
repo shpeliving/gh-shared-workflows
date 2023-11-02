@@ -35,13 +35,13 @@ jobs:
     runs-on: self-hosted
     steps:
       - name: Checkout Repository
-        # actions/checkout@v3.1.0
-        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
+        # actions/checkout@v4.1.1
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
         with:
           token: ${{ secrets.github-token }}
       - name: Checkout GitHub Shared Repository
-        # actions/checkout@v3.1.0
-        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
+        # actions/checkout@v4.1.1
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
         with:
           repository: shpeliving/gh-shared-workflows
           token: ${{ secrets.github-token }}
