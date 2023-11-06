@@ -66,9 +66,30 @@ jobs:
           dir_names: true
       - name: Show all changes files
         run: |
-          for directory in ${{ steps.changed-files.outputs.all_changed_files }}; do
-            echo "$directory was changed"
+          for APP_BACKEND_YAML in ${{ inputs.backends-directory }}/*/.deployment/backendapp.yaml; do
+            APP_DIR=$(echo ${APP_BACKEND_YAML} | sed -e 's#/\.deployment/backendapp.yaml##')
+            DEPS=$(go list -deps -C ${APP_DIR} | grep '^github.com/shpeliving/factory/' | sed -e 's#^github.com/shpeliving/factory/##' | sort)
+          
+            CHANGED=0
+            for DEP in `echo ${DEPS}`; do
+              if [[ ${{ steps.changed-files.outputs.all_changed_files }} =~ $DEP ]]; then
+                CHANGED=1
+                break
+              fi
+            done
+          
+            echo "$APP_DIR -- $CHANGED"
+            if [[ "$CHANGED" == "1" ]]; then
+              echo "$APP_DIR -- $CHANGED"
+            fi
           done
+          #for directory in ${{ steps.changed-files.outputs.all_changed_files }}; do
+          #  echo "$directory was changed"
+          #done
+          # .deployment
+          # .docker
+          # .github
+          
 
 
 #      - name: Deploy Chimera Apps
