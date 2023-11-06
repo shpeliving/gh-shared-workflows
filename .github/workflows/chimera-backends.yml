@@ -58,15 +58,28 @@ jobs:
           path: .github/gh-shared-workflows
           # TODO: tag this later
           ref: main
-      - name: Deploy Chimera Apps
-        uses: ./.github/gh-shared-workflows/.github/actions/chimera/build-deploy-apps
-        id: docker-build
+      - name: Get changed directories
+        id: changed-files
+        # tj-actions/changed-files@v40.1.0
+        uses: tj-actions/changed-files@18c8a4ecebe93d32ed8a88e1d0c098f5f68c221b
         with:
-          github-token: ${{ secrets.github-token }}
-          builder-dockerfile: ${{ inputs.builder-dockerfile }}
-          builder-tag: ${{ inputs.builder-tag }}
-          backends-directory: ${{ inputs.backends-directory }}
-          image-repository: ${{ inputs.image-repository }}
-          image-version: ${{ inputs.image-version }}
-          project-id: ${{ inputs.project-id }}
-          environment: ${{ inputs.environment }}
+          dir-names: true
+      - name: Show all changes files
+        run: |
+          for directory in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "$file was changed"
+          done
+
+
+#      - name: Deploy Chimera Apps
+#        uses: ./.github/gh-shared-workflows/.github/actions/chimera/build-deploy-apps
+#        id: docker-build
+#        with:
+#          github-token: ${{ secrets.github-token }}
+#          builder-dockerfile: ${{ inputs.builder-dockerfile }}
+#          builder-tag: ${{ inputs.builder-tag }}
+#          backends-directory: ${{ inputs.backends-directory }}
+#          image-repository: ${{ inputs.image-repository }}
+#          image-version: ${{ inputs.image-version }}
+#          project-id: ${{ inputs.project-id }}
+#          environment: ${{ inputs.environment }}
