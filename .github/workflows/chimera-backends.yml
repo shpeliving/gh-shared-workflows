@@ -63,11 +63,11 @@ jobs:
         # tj-actions/changed-files@v40.1.0
         uses: tj-actions/changed-files@18c8a4ecebe93d32ed8a88e1d0c098f5f68c221b
         with:
-          dir-names: true
+          dir_names: true
       - name: Show all changes files
         run: |
           for directory in ${{ steps.changed-files.outputs.all_changed_files }}; do
-            echo "$file was changed"
+            echo "$directory was changed"
           done
 
 
