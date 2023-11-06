@@ -66,13 +66,14 @@ jobs:
           dir_names: true
       - name: Show all changes files
         run: |
+          CHANGED_FILES="${{ steps.changed-files.outputs.all_changed_files }}"
           for APP_BACKEND_YAML in ${{ inputs.backends-directory }}/*/.deployment/backendapp.yaml; do
             APP_DIR=$(echo ${APP_BACKEND_YAML} | sed -e 's#/\.deployment/backendapp.yaml##')
             DEPS=$(go list -deps -C ${APP_DIR} | grep '^github.com/shpeliving/factory/' | sed -e 's#^github.com/shpeliving/factory/##' | sort)
           
             CHANGED=0
             for DEP in `echo ${DEPS}`; do
-              if [[ ${{ steps.changed-files.outputs.all_changed_files }} =~ $DEP ]]; then
+              if [[ $CHANGED_FILES =~ $DEP ]]; then
                 CHANGED=1
                 break
               fi
