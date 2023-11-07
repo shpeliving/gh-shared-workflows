@@ -66,42 +66,15 @@ jobs:
           dir_names: true
       - name: Show all changes files
         run: |
-          CHANGED_FILES="${{ steps.changed-files.outputs.all_changed_files }}"
-          for APP_BACKEND_YAML in ${{ inputs.backends-directory }}/*/.deployment/backendapp.yaml; do
-            APP_DIR=$(echo ${APP_BACKEND_YAML} | sed -e 's#/\.deployment/backendapp.yaml##')
-            DEPS=$(go list -deps -C ${APP_DIR} | grep '^github.com/shpeliving/factory/' | sed -e 's#^github.com/shpeliving/factory/##' | sort)
-          
-            CHANGED=0
-            for DEP in `echo ${DEPS}`; do
-              if [[ $CHANGED_FILES =~ $DEP ]]; then
-                CHANGED=1
-                break
-              fi
-            done
-          
-            echo "$APP_DIR -- $CHANGED"
-            if [[ "$CHANGED" == "1" ]]; then
-              echo "$APP_DIR -- $CHANGED"
-            fi
-          done
-          #for directory in ${{ steps.changed-files.outputs.all_changed_files }}; do
-          #  echo "$directory was changed"
-          #done
-          # .deployment
-          # .docker
-          # .github
-          
-
-
-#      - name: Deploy Chimera Apps
-#        uses: ./.github/gh-shared-workflows/.github/actions/chimera/build-deploy-apps
-#        id: docker-build
-#        with:
-#          github-token: ${{ secrets.github-token }}
-#          builder-dockerfile: ${{ inputs.builder-dockerfile }}
-#          builder-tag: ${{ inputs.builder-tag }}
-#          backends-directory: ${{ inputs.backends-directory }}
-#          image-repository: ${{ inputs.image-repository }}
-#          image-version: ${{ inputs.image-version }}
-#          project-id: ${{ inputs.project-id }}
-#          environment: ${{ inputs.environment }}
+      - name: Deploy Chimera Apps
+        uses: ./.github/gh-shared-workflows/.github/actions/chimera/build-deploy-apps
+        id: docker-build
+        with:
+          github-token: ${{ secrets.github-token }}
+          builder-dockerfile: ${{ inputs.builder-dockerfile }}
+          builder-tag: ${{ inputs.builder-tag }}
+          backends-directory: ${{ inputs.backends-directory }}
+          image-repository: ${{ inputs.image-repository }}
+          image-version: ${{ inputs.image-version }}
+          project-id: ${{ inputs.project-id }}
+          environment: ${{ inputs.environment }}
