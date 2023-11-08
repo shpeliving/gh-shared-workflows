@@ -1,4 +1,4 @@
-name: Chimera backends continuous integration and deployment
+name: Chimera build and deploy backends
 on:
   workflow_call:
     inputs:
@@ -43,8 +43,8 @@ env:
   BUILD_APPS_OUTPUT_FILE: build-apps
   DEPLOY_APPS_OUTPUT_FILE: deploy-apps
 jobs:
-  build-apps:
-    name: Build apps
+  build-deploy-apps:
+    name: Build and deploy apps
     runs-on: self-hosted
     steps:
       - name: Checkout repository
