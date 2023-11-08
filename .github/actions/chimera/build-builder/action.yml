@@ -1,0 +1,51 @@
+name: Build builder image
+description: Build builder image
+inputs:
+  github-token:
+    description: The GitHub token used for accessing internal repositories
+    required: true
+  builder-dockerfile:
+    description: The path to the builder Dockerfile
+    required: true
+  builder-tag:
+    description: The expected builder tag
+    required: true
+  changed-directories-file:
+    description: File with all directories that are changed
+    required: true
+  build-apps-output-file:
+    description: Build apps output file
+    required: true
+  deploy-apps-output-file:
+    description: Deploy apps output file
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Generate build apps output file
+      run: |
+        docker buildx build \
+          --build-arg=GITHUB_TOKEN=${{ inputs.github-token }} \
+          --build-arg=CHANGED_DIRECTORIES_FILE=${{ inputs.changed-directories-file }} \
+          --build-arg=BUILD_APPS_OUTPUT_FILE=${{ inputs.build-apps-output-file }} \
+          --build-arg=DEPLOY_APPS_OUTPUT_FILE=${{ inputs.deploy-apps-output-file }} \
+          -f "${{ inputs.builder-dockerfile }}" \
+          --target build-deploy-apps-output-file \
+          --output type=local,dest=build-deploy-apps-output-file \
+          . && \
+        mv build-deploy-apps-output-file/${{ inputs.build-apps-output-file }} . && \
+        mv build-deploy-apps-output-file/${{ inputs.deploy-apps-output-file }} . && \
+        rm -rf build-apps-output
+      shell: bash
+    - name: Build builder image
+      run: |
+        docker buildx build \
+          --build-arg=GITHUB_TOKEN=${{ inputs.github-token }} \
+          --build-arg=CHANGED_DIRECTORIES_FILE=${{ inputs.changed-directories-file }} \
+          --build-arg=BUILD_APPS_OUTPUT_FILE=${{ inputs.build-apps-output-file }} \
+          --build-arg=DEPLOY_APPS_OUTPUT_FILE=${{ inputs.deploy-apps-output-file }} \
+          -f "${{ inputs.builder-dockerfile }}" \
+          -t "${{ inputs.builder-tag }}" \
+          --load \
+          .
+      shell: bash

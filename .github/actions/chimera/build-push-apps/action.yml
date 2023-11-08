@@ -1,0 +1,22 @@
+name: Build and push apps
+description: Build and push apps
+inputs:
+  github-token:
+    description: The GitHub token used for accessing internal repositories
+    required: true
+  build-apps-output-file:
+    description: Build apps output file
+    required: true
+  image-repository:
+    description: The docker repository you are about to push the docker images to
+    required: true
+  image-version:
+    description: The version of the docker images
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Build and push apps
+      run: |
+        chimera-build-push-apps.sh ${{ inputs.build-apps-output-file }} ${{ inputs.image-repository }} ${{ inputs.image-version }} ${{ inputs.github-token }}
+      shell: bash

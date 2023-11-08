@@ -1,4 +1,4 @@
-name: Chimera Backends Continuous Integration and Deployment
+name: Chimera backends continuous integration and deployment
 on:
   workflow_call:
     inputs:
@@ -38,18 +38,22 @@ on:
       github-token:
         required: true
         description: The GitHub token used for accessing internal repositories
+env:
+  CHANGED_DIRECTORIES_FILE: changed-directories
+  BUILD_APPS_OUTPUT_FILE: build-apps
+  DEPLOY_APPS_OUTPUT_FILE: deploy-apps
 jobs:
   build-apps:
     name: Build apps
     runs-on: self-hosted
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         # actions/checkout@v4.1.1
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
         with:
           token: ${{ secrets.github-token }}
           sparse-checkout: ${{ inputs.source-directories }}
-      - name: Checkout GitHub Shared Repository
+      - name: Checkout shared workflows repository
         # actions/checkout@v4.1.1
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
         with:
@@ -64,16 +68,30 @@ jobs:
         uses: tj-actions/changed-files@18c8a4ecebe93d32ed8a88e1d0c098f5f68c221b
         with:
           dir_names: true
-      - name: Show all changes files
-        run: |
-      - name: Deploy Chimera Apps
-        uses: ./.github/gh-shared-workflows/.github/actions/chimera/build-deploy-apps
-        id: docker-build
+      - name: Write changed directories to file
+        run: echo "${{ steps.changed-files.outputs.all_changed_files }}" > ${CHANGED_DIRECTORIES_FILE}
+        shell: bash
+      - name: Build builder image
+        uses: ./.github/gh-shared-workflows/.github/actions/chimera/build-builder
         with:
           github-token: ${{ secrets.github-token }}
           builder-dockerfile: ${{ inputs.builder-dockerfile }}
           builder-tag: ${{ inputs.builder-tag }}
-          backends-directory: ${{ inputs.backends-directory }}
+          changed-directories-file: ${{ env.CHANGED_DIRECTORIES_FILE }}
+          build-apps-output-file: ${{ env.BUILD_APPS_OUTPUT_FILE }}
+          deploy-apps-output-file: ${{ env.DEPLOY_APPS_OUTPUT_FILE }}
+      - name: Build and push apps
+        uses: ./.github/gh-shared-workflows/.github/actions/chimera/build-push-apps
+        with:
+          github-token: ${{ secrets.github-token }}
+          build-apps-output-file: ${{ env.BUILD_APPS_OUTPUT_FILE }}
+          image-repository: ${{ inputs.image-repository }}
+          image-version: ${{ inputs.image-version }}
+      - name: Deploy apps
+        uses: ./.github/gh-shared-workflows/.github/actions/chimera/deploy-apps
+        with:
+          github-token: ${{ secrets.github-token }}
+          deploy-apps-output-file: ${{ env.DEPLOY_APPS_OUTPUT_FILE }}
           image-repository: ${{ inputs.image-repository }}
           image-version: ${{ inputs.image-version }}
           project-id: ${{ inputs.project-id }}

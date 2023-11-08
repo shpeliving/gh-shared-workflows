@@ -1,0 +1,28 @@
+name: Deploy apps
+description: Deploy apps
+inputs:
+  github-token:
+    description: The GitHub token used for accessing internal repositories
+    required: true
+  deploy-apps-output-file:
+    description: Deploy apps output file
+    required: true
+  image-repository:
+    description: The docker repository you are about to push the docker images to
+    required: true
+  image-version:
+    description: The version of the docker images
+    required: true
+  project-id:
+    description: The google cloud project ID
+    required: true
+  environment:
+    description: The environment you are about to deploy to (dev or live)
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Deploy apps
+      run: |
+        chimera-deploy-apps.sh ${{ inputs.deploy-apps-output-file }} ${{ inputs.image-repository }} ${{ inputs.image-version }} ${{ inputs.project-id }} ${{ inputs.environment }} ${{ inputs.github-token }}
+      shell: bash
