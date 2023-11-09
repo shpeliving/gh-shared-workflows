@@ -22,7 +22,6 @@ jobs:
   test-apps:
     name: Test apps
     runs-on: self-hosted
-    container: gcr.io/infra-368116/shpeliving/gcpemulators:1.0.0
     steps:
       # actions/checkout@v4.1.1
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
@@ -34,14 +33,14 @@ jobs:
       - name: Setup go to use GitHub token
         run: |
           git config --global url."https://${{ secrets.github-token }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
-          /usr/local/go/bin/go env -w GOPRIVATE=github.com/shpeliving/*
+          go env -w GOPRIVATE=github.com/shpeliving/*
       - name: Download modules
         working-directory: ${{ inputs.working-directory }}
-        run: /usr/local/go/bin/go mod download
+        run: go mod download
       - name: Start emulators
         run: |
-          buckets.sh
-          watchdog > /tmp/watchdog.log 2>&1 &
+          sudo buckets.sh
+          sudo watchdog > /tmp/watchdog.log 2>&1 &
           echo "Waiting 10 seconds for watchdog to start emulators..."
           sleep 10
           cat /tmp/watchdog.log
@@ -52,16 +51,13 @@ jobs:
         working-directory: ${{ inputs.working-directory }}
         run: >
           SHPE_UNIT_TEST=1  
-          /usr/local/go/bin/go test ./... -v -count 1 2>&1 | grep -v "no test files" | tee /tmp/testoutput.log
+          go test ./... -v -count 1 2>&1 | grep -v "no test files" | tee /tmp/testoutput.log
       - name: Stop emulators
         if: always()
-        run: ps axu | grep watchdog | grep -v grep | awk '{print $2}' | xargs kill -SIGINT && cat /tmp/watchdog.log
-      - name: Setup go-junit-report
-        if: always()
-        run: GOBIN=/usr/local/bin/ /usr/local/go/bin/go install github.com/jstemmer/go-junit-report/v2@latest
+        run: ps axu | grep watchdog | grep -v grep | awk '{print $2}' | xargs sudo kill -SIGINT && cat /tmp/watchdog.log
       - name: Prepare junit report
         if: always()
-        run: cat /tmp/testoutput.log | /usr/local/bin/go-junit-report -set-exit-code > /tmp/report.xml
+        run: cat /tmp/testoutput.log | go-junit-report -set-exit-code > /tmp/report.xml
       - name: Display junit report
         if: always()
         run: cat /tmp/testoutput.log
