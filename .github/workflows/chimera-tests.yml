@@ -39,8 +39,8 @@ jobs:
         run: go mod download
       - name: Start emulators
         run: |
-          sudo buckets.sh
-          sudo watchdog > /tmp/watchdog.log 2>&1 &
+          buckets.sh
+          watchdog > /tmp/watchdog.log 2>&1 &
           echo "Waiting 10 seconds for watchdog to start emulators..."
           sleep 10
           cat /tmp/watchdog.log
@@ -54,7 +54,7 @@ jobs:
           go test ./... -v -count 1 2>&1 | grep -v "no test files" | tee /tmp/testoutput.log
       - name: Stop emulators
         if: always()
-        run: ps axu | grep watchdog | grep -v grep | awk '{print $2}' | xargs sudo kill -SIGINT && cat /tmp/watchdog.log
+        run: ps axu | grep watchdog | grep -v grep | awk '{print $2}' | xargs kill -SIGINT && cat /tmp/watchdog.log
       - name: Prepare junit report
         if: always()
         run: cat /tmp/testoutput.log | go-junit-report -set-exit-code > /tmp/report.xml
