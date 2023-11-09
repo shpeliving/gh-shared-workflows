@@ -80,6 +80,7 @@ jobs:
           changed-directories-file: ${{ env.CHANGED_DIRECTORIES_FILE }}
           build-apps-output-file: ${{ env.BUILD_APPS_OUTPUT_FILE }}
           deploy-apps-output-file: ${{ env.DEPLOY_APPS_OUTPUT_FILE }}
+          environment: ${{ inputs.environment }}
       - name: Build and push apps
         uses: ./.github/gh-shared-workflows/.github/actions/chimera/build-push-apps
         with:

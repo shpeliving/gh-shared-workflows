@@ -19,24 +19,12 @@ inputs:
   deploy-apps-output-file:
     description: Deploy apps output file
     required: true
+  environment:
+    description: The environment you are about to deploy to (dev or live)
+    required: true
 runs:
   using: composite
   steps:
-    - name: Generate build apps output file
-      run: |
-        docker buildx build \
-          --build-arg=GITHUB_TOKEN=${{ inputs.github-token }} \
-          --build-arg=CHANGED_DIRECTORIES_FILE=${{ inputs.changed-directories-file }} \
-          --build-arg=BUILD_APPS_OUTPUT_FILE=${{ inputs.build-apps-output-file }} \
-          --build-arg=DEPLOY_APPS_OUTPUT_FILE=${{ inputs.deploy-apps-output-file }} \
-          -f "${{ inputs.builder-dockerfile }}" \
-          --target build-deploy-apps-output-file \
-          --output type=local,dest=build-deploy-apps-output-file \
-          . && \
-        mv build-deploy-apps-output-file/${{ inputs.build-apps-output-file }} . && \
-        mv build-deploy-apps-output-file/${{ inputs.deploy-apps-output-file }} . && \
-        rm -rf build-apps-output
-      shell: bash
     - name: Build builder image
       run: |
         docker buildx build \
@@ -44,8 +32,25 @@ runs:
           --build-arg=CHANGED_DIRECTORIES_FILE=${{ inputs.changed-directories-file }} \
           --build-arg=BUILD_APPS_OUTPUT_FILE=${{ inputs.build-apps-output-file }} \
           --build-arg=DEPLOY_APPS_OUTPUT_FILE=${{ inputs.deploy-apps-output-file }} \
+          --build-arg=ENVIRONMENT=${{ inputs.environment }} \
           -f "${{ inputs.builder-dockerfile }}" \
           -t "${{ inputs.builder-tag }}" \
           --load \
           .
+      shell: bash
+    - name: Generate build apps output file
+      run: |
+        docker buildx build \
+          --build-arg=GITHUB_TOKEN=${{ inputs.github-token }} \
+          --build-arg=CHANGED_DIRECTORIES_FILE=${{ inputs.changed-directories-file }} \
+          --build-arg=BUILD_APPS_OUTPUT_FILE=${{ inputs.build-apps-output-file }} \
+          --build-arg=DEPLOY_APPS_OUTPUT_FILE=${{ inputs.deploy-apps-output-file }} \
+          --build-arg=ENVIRONMENT=${{ inputs.environment }} \
+          -f "${{ inputs.builder-dockerfile }}" \
+          --target build-deploy-apps-output-file \
+          --output type=local,dest=build-deploy-apps-output-file \
+          . && \
+        mv build-deploy-apps-output-file/${{ inputs.build-apps-output-file }} . && \
+        mv build-deploy-apps-output-file/${{ inputs.deploy-apps-output-file }} . && \
+        rm -rf build-apps-output
       shell: bash
