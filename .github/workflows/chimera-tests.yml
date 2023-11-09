@@ -30,8 +30,6 @@ jobs:
           token: ${{ secrets.github-token }}
           lfs: false
           submodules: false
-      - name: Debug
-        run: id
       - name: Setup go to use GitHub token
         run: |
           git config --global url."https://${{ secrets.github-token }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
