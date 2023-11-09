@@ -6,12 +6,18 @@ on:
         type: string
         required: true
         description: The working directory where to clone the repo
+      bucket-names:
+        type: string
+        required: true
+        description: The GCP buckets that are going to be created
+      project-id:
+        type: string
+        required: true
+        description: The default GCP project
     secrets:
       github-token:
         required: true
         description: The GitHub token used for accessing internal repositories
-env:
-  GITHUB_TOKEN: ${{ secrets.github-token }}
 jobs:
   test-apps:
     name: Test apps
@@ -39,6 +45,9 @@ jobs:
           echo "Waiting 10 seconds for watchdog to start emulators..."
           sleep 10
           cat /tmp/watchdog.log
+        env:
+          BUCKET_NAMES: ${{ inputs.bucket-names }}
+          DEFAULT_GCP_PROJECT: ${{ inputs.project-id }}
       - name: Run unit tests
         working-directory: ${{ inputs.working-directory }}
         run: >
