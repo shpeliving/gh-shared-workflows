@@ -47,6 +47,7 @@ jobs:
         env:
           BUCKET_NAMES: ${{ inputs.bucket-names }}
           DEFAULT_GCP_PROJECT: ${{ inputs.project-id }}
+          WATCHDOG_SKIP_HARD_KILL: 1
       - name: Run unit tests
         working-directory: ${{ inputs.working-directory }}
         run: >
