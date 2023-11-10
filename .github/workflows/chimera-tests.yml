@@ -23,5 +23,58 @@ jobs:
     name: Test apps
     runs-on: self-hosted
     steps:
-      - name: ps axu
+      # actions/checkout@v4.1.1
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        with:
+          path: ${{ inputs.working-directory }}
+          token: ${{ secrets.github-token }}
+          lfs: false
+          submodules: false
+      - name: Setup go to use GitHub token
+        run: |
+          git config --global url."https://${{ secrets.github-token }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+          go env -w GOPRIVATE=github.com/shpeliving/*
+      - name: Download modules
+        working-directory: ${{ inputs.working-directory }}
+        run: go mod download
+      - name: Start emulators
+        run: |
+          buckets.sh
+          watchdog > /tmp/watchdog.log 2>&1 &
+          echo "Waiting 10 seconds for watchdog to start emulators..."
+          sleep 10
+          cat /tmp/watchdog.log
+        env:
+          BUCKET_NAMES: ${{ inputs.bucket-names }}
+          DEFAULT_GCP_PROJECT: ${{ inputs.project-id }}
+      - name: Run unit tests
+        working-directory: ${{ inputs.working-directory }}
+        run: >
+          SHPE_UNIT_TEST=1
+          go test ./... -v -count 1 2>&1 | grep -v "no test files" | tee /tmp/testoutput.log
+      - name: Stop emulators
+        if: always()
         run: ps axu
+      - name: Prepare junit report
+        if: always()
+        run: cat /tmp/testoutput.log | go-junit-report -set-exit-code > /tmp/report.xml
+      - name: Display junit report
+        if: always()
+        run: cat /tmp/testoutput.log
+      - name: Test summary
+        # test-summary/action@v2.1
+        uses: test-summary/action@62bc5c68de2a6a0d02039763b8c754569df99e3f
+        with:
+          paths: |
+            /tmp/report.xml
+        if: always()
+      - name: Test report
+        # dorny/test-reporter@v1.7.0
+        uses: dorny/test-reporter@afe6793191b75b608954023a46831a3fe10048d4
+        if: always()
+        with:
+          name: Factory Tests Result
+          path: /tmp/report.xml
+          working-directory: ${{ inputs.working-directory }}
+          reporter: java-junit
+          fail-on-error: 'true'
