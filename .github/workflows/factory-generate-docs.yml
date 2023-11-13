@@ -1,0 +1,51 @@
+name: Factory generate docs
+on:
+  workflow_call:
+    inputs:
+      source-directories:
+        type: string
+        required: true
+        description: The directories which affect the building process (they are used for sparse checkout)
+    secrets:
+      github-token:
+        required: true
+        description: The GitHub token used for accessing internal repositories
+env:
+  DOCS_REPOSITORY_PATH: docs-repository
+jobs:
+  publish-npm:
+    name: Generate docs
+    runs-on: self-hosted
+    steps:
+      - name: Checkout repository
+        # actions/checkout@v4.1.1
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        with:
+          token: ${{ secrets.github-token }}
+          sparse-checkout: ${{ inputs.source-directories }}
+      - name: Checkout docs repository
+        # actions/checkout@v4.1.1
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        with:
+          repository: shpeliving/docs
+          token: ${{ secrets.github-token }}
+          path: ${{ env.DOCS_REPOSITORY_PATH }}
+          ref: main
+      - name: Setup go to use GitHub token
+        run: |
+          git config --global url."https://${{ secrets.github-token }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+          go env -w GOPRIVATE=github.com/shpeliving/*
+      - name: Run docs generate
+        run: |
+          go run ./scripts/docs generate --factory-dir . --output-dir ${{ env.DOCS_REPOSITORY_PATH }}
+      - name: Git commit docs
+        # stefanzweifel/git-auto-commit-action@v5.0.0
+        uses: stefanzweifel/git-auto-commit-action@8756aa072ef5b4a080af5dc8fef36c5d586e521d
+        with:
+          commit_message: Update auto-generated docs from factory
+          file_pattern: 'arch-overview.*'
+          repository: ${{ env.DOCS_REPOSITORY_PATH }}
+          branch: main
+          commit_user_name: Factory Github Actions Bot
+          commit_user_email: factory-dev@shpe.com
+          commit_author: Factory <factory-dev@shpe.com>

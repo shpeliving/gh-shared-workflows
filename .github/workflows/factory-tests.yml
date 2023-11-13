@@ -29,8 +29,6 @@ jobs:
         with:
           path: ${{ inputs.working-directory }}
           token: ${{ secrets.github-token }}
-          lfs: false
-          submodules: false
       - name: Setup go to use GitHub token
         run: |
           git config --global url."https://${{ secrets.github-token }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"

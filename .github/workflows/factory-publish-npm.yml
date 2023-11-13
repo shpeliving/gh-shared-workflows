@@ -4,7 +4,7 @@ on:
     secrets:
       node-auth-token:
         required: true
-        description: TODO
+        description: The npm token used for accessing the internal shpeliving repositories
       github-token:
         required: true
         description: The GitHub token used for accessing internal repositories
@@ -18,8 +18,6 @@ jobs:
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
         with:
           token: ${{ secrets.github-token }}
-          lfs: false
-          submodules: false
       - name: Prepare package
         run: |
           mkdir -p __package/
