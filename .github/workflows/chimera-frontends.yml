@@ -87,7 +87,7 @@ jobs:
             cd "${APP_DIRECTORY}"
             npm install
             GATEWAY_ADDRESS="${{ inputs.gateway-address }}" GATEWAY_WS_ADDRESS="${{ inputs.gateway-address-websocket }}" npm run build
-            cd ..
+            cd -
           done < "${BUILD_DEPLOY_APPS_OUTPUT_FILE}"
         shell: bash
         env:
