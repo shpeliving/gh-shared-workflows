@@ -1,4 +1,4 @@
-name: Chimera test backends
+name: Factory test backends
 on:
   workflow_call:
     inputs:
@@ -23,8 +23,9 @@ jobs:
     name: Test apps
     runs-on: self-hosted
     steps:
-      # actions/checkout@v4.1.1
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+      - name: Checkout repository
+        # actions/checkout@v4.1.1
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
         with:
           path: ${{ inputs.working-directory }}
           token: ${{ secrets.github-token }}
