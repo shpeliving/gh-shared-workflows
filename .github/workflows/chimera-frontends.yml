@@ -1,0 +1,85 @@
+name: Chimera build and deploy frontends
+on:
+  workflow_call:
+    inputs:
+      source-directories:
+        type: string
+        required: true
+        description: The directories which affect the building process (they are used for sparse checkout)
+      frontends-directory:
+        type: string
+        required: true
+        description: The directory to scan for frontends apps (should be included in source-directories)
+      gateway-address:
+        type: string
+        required: true
+        description: The chimera web gateway address
+      gateway-address-websocket:
+        type: string
+        required: true
+        description: The chimera websocket gateway address
+      version:
+        type: string
+        required: true
+        description: The version of the web app that is going to be released by this flow
+      upload-bucket:
+        type: string
+        required: true
+        description: The google cloud storage bucket, where the artifact will be uploaded
+      environment:
+        type: string
+        required: true
+        description: The environment you are about to deploy to (dev or live)
+    secrets:
+      node-auth-token:
+        required: true
+        description: The npm token used for accessing the internal shpeliving repositories
+      github-token:
+        required: true
+        description: The GitHub token used for accessing internal repositories
+env:
+  CHANGED_DIRECTORIES_FILE: changed-directories
+  BUILD_DEPLOY_APPS_OUTPUT_FILE: build-deploy-apps
+jobs:
+  build-deploy-apps:
+    name: Build and deploy apps
+    runs-on: self-hosted
+    steps:
+      - name: Checkout repository
+        # actions/checkout@v4.1.1
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        with:
+          token: ${{ secrets.github-token }}
+          sparse-checkout: ${{ inputs.source-directories }}
+      - name: Get changed directories
+        id: changed-files
+        # tj-actions/changed-files@v40.1.0
+        uses: tj-actions/changed-files@18c8a4ecebe93d32ed8a88e1d0c098f5f68c221b
+        with:
+          dir_names: true
+      - name: Write changed directories to file
+        run: echo "${{ steps.changed-files.outputs.all_changed_files }}" > ${CHANGED_DIRECTORIES_FILE}
+        shell: bash
+      - name: Generate build deploy apps output file
+        run: |
+          touch "${BUILD_DEPLOY_APPS_OUTPUT_FILE}" 
+          for APP_FRONTEND_YAML in "${{ inputs.frontends-directory }}"/*/.deployment/frontendapp.yaml; do
+            APP_DIRECTORY=${APP_FRONTEND_YAML//\/.deployment\/frontendapp.yaml/}
+        
+            if [ "$(grep -ic "${APP_DIRECTORY}" "${CHANGED_DIRECTORIES_FILE}")" -ge 1 ]; then
+              echo "${APP_DIRECTORY}" >> "${BUILD_DEPLOY_APPS_OUTPUT_FILE}"
+            fi
+          done
+        shell: bash
+      - name: Build frontend apps
+        run: |
+          while IFS= read -r APP_DIRECTORY; do
+            cd "${APP_DIRECTORY}"
+            npm install
+            GATEWAY_ADDRESS="${{ inputs.gateway-address }}" GATEWAY_WS_ADDRESS="${{ inputs.gateway-address-websocket }}" npm run build
+            cd ..
+          done < "${BUILD_DEPLOY_APPS_OUTPUT_FILE}"
+        shell: bash
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.node-auth-token }}
+      # TODO: Publish
