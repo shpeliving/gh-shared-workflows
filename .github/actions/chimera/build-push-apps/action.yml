@@ -17,6 +17,5 @@ runs:
   using: composite
   steps:
     - name: Build and push apps
-      run: |
-        chimera-build-push-apps.sh ${{ inputs.build-apps-output-file }} ${{ inputs.image-repository }} ${{ inputs.image-version }} ${{ inputs.github-token }}
+      run: chimera-build-push-apps.sh ${{ inputs.build-apps-output-file }} ${{ inputs.image-repository }} ${{ inputs.image-version }} ${{ inputs.github-token }}
       shell: bash

@@ -53,6 +53,8 @@ jobs:
         uses: tj-actions/changed-files@18c8a4ecebe93d32ed8a88e1d0c098f5f68c221b
         with:
           dir_names: true
+      - name: Setup ssh to use GitHub token (npm)
+        run: git config --global url."https://${{ secrets.github-token }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
       - name: Write changed directories to file
         run: echo "${{ steps.changed-files.outputs.all_changed_files }}" > ${CHANGED_DIRECTORIES_FILE}
         shell: bash
@@ -90,6 +92,5 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.node-auth-token }}
       - name: Deploy frontend apps
-        run: |
-          chimera-fe-deploy-apps.sh "${BUILD_DEPLOY_APPS_OUTPUT_FILE}" "${{ inputs.environment }}" "${{ inputs.version }}" "${{ inputs.upload-bucket }}" "${{ secrets.github-token }}"
+        run: chimera-fe-deploy-apps.sh "${BUILD_DEPLOY_APPS_OUTPUT_FILE}" "${{ inputs.environment }}" "${{ inputs.version }}" "${{ inputs.upload-bucket }}" "${{ secrets.github-token }}"
         shell: bash

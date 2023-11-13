@@ -37,8 +37,7 @@ jobs:
           go env -w GOPRIVATE=github.com/shpeliving/*
         shell: bash
       - name: Run docs generate
-        run: |
-          go run ./scripts/docs generate --factory-dir . --output-dir ${{ env.DOCS_REPOSITORY_PATH }}
+        run: go run ./scripts/docs generate --factory-dir . --output-dir ${{ env.DOCS_REPOSITORY_PATH }}
         shell: bash
       - name: Git commit docs
         # stefanzweifel/git-auto-commit-action@v5.0.0
