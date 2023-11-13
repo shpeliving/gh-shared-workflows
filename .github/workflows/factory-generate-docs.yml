@@ -35,9 +35,11 @@ jobs:
         run: |
           git config --global url."https://${{ secrets.github-token }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
           go env -w GOPRIVATE=github.com/shpeliving/*
+        shell: bash
       - name: Run docs generate
         run: |
           go run ./scripts/docs generate --factory-dir . --output-dir ${{ env.DOCS_REPOSITORY_PATH }}
+        shell: bash
       - name: Git commit docs
         # stefanzweifel/git-auto-commit-action@v5.0.0
         uses: stefanzweifel/git-auto-commit-action@8756aa072ef5b4a080af5dc8fef36c5d586e521d

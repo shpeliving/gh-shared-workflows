@@ -24,12 +24,14 @@ jobs:
           cp api/proto/js/* __package/ -r
           cp .github/npm/package.json __package/
           cp .github/npm/package-lock.json __package/
+        shell: bash
       - name: Get latest version
         id: latest_version
         run: |
           latest_version=$(npm show @shpeliving/factory-proto version)
           echo "Latest version: $latest_version"
           echo "LATEST_VERSION=$latest_version" >> $GITHUB_ENV
+        shell: bash
         env:
           NODE_AUTH_TOKEN: ${{ secrets.node-auth-token }}
       - name: Publish package
@@ -57,6 +59,7 @@ jobs:
             npm publish --tag beta --access public
             echo "PUBLISHED_VERSION=$published_version" >> $GITHUB_ENV
           fi
+        shell: bash
         env:
           NODE_AUTH_TOKEN: ${{ secrets.node-auth-token }}
       - name: Add published version comment
@@ -83,3 +86,4 @@ jobs:
           else
             echo "NONE"
           fi
+        shell: bash

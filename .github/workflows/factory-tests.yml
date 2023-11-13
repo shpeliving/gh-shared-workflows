@@ -33,9 +33,11 @@ jobs:
         run: |
           git config --global url."https://${{ secrets.github-token }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
           go env -w GOPRIVATE=github.com/shpeliving/*
+        shell: bash
       - name: Download modules
         working-directory: ${{ inputs.working-directory }}
         run: go mod download
+        shell: bash
       - name: Start emulators
         run: |
           buckets.sh
@@ -43,6 +45,7 @@ jobs:
           echo "Waiting 10 seconds for watchdog to start emulators..."
           sleep 10
           cat /tmp/watchdog.log
+        shell: bash
         env:
           BUCKET_NAMES: ${{ inputs.bucket-names }}
           DEFAULT_GCP_PROJECT: ${{ inputs.project-id }}
@@ -52,12 +55,15 @@ jobs:
         run: >
           SHPE_UNIT_TEST=1
           go test ./... -v -count 1 2>&1 | grep -v "no test files" | tee /tmp/testoutput.log
+        shell: bash
       - name: Prepare junit report
         if: always()
         run: cat /tmp/testoutput.log | go-junit-report -set-exit-code > /tmp/report.xml
+        shell: bash
       - name: Display junit report
         if: always()
         run: cat /tmp/testoutput.log
+        shell: bash
       - name: Test summary
         # test-summary/action@v2.1
         uses: test-summary/action@62bc5c68de2a6a0d02039763b8c754569df99e3f
@@ -78,4 +84,5 @@ jobs:
       - name: Stop emulators
         if: always()
         run: ps axu | grep watchdog | grep -v grep | awk '{print $2}' | xargs kill -SIGINT || true
+        shell: bash
         continue-on-error: true
