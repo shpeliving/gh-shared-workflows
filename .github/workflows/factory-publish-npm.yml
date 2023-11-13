@@ -36,10 +36,6 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.node-auth-token }}
       - name: Publish package
         run: |
-          echo $GITHUB_REF
-          echo $LATEST_VERSION
-          echo $GITHUB_RUN_NUMBER
-          env
           cd __package
           if [[ $GITHUB_REF == 'refs/heads/main' ]]; then
             # split the version string into an array using the "." delimiter
