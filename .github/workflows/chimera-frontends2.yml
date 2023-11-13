@@ -82,7 +82,9 @@ jobs:
           while IFS= read -r APP_DIRECTORY; do
             cd "${APP_DIRECTORY}"
             echo "${{ inputs.env-file-content }}" > .env.local
+            ls -la .env.local
             cat .env.local
+            ls -la .env.local
             npm install
             npm run build
             cd -
