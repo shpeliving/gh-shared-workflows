@@ -10,14 +10,10 @@ on:
         type: string
         required: true
         description: The directory to scan for frontends apps (should be included in source-directories)
-      gateway-address:
+      env-file-content:
         type: string
         required: true
-        description: The chimera web gateway address
-      gateway-address-websocket:
-        type: string
-        required: true
-        description: The chimera websocket gateway address
+        description: The content of the env file
       version:
         type: string
         required: true
@@ -85,8 +81,9 @@ jobs:
         run: |
           while IFS= read -r APP_DIRECTORY; do
             cd "${APP_DIRECTORY}"
+            echo "${{ inputs.env-file-content }}" > .env.local
             npm install
-            GATEWAY_ADDRESS="${{ inputs.gateway-address }}" GATEWAY_WS_ADDRESS="${{ inputs.gateway-address-websocket }}" npm run build
+            npm run build
             cd -
           done < "${BUILD_DEPLOY_APPS_OUTPUT_FILE}"
         shell: bash
