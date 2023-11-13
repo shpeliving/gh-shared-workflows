@@ -1,0 +1,87 @@
+name: Factory publish protobuf NPM package
+on:
+  workflow_call:
+    secrets:
+      node-auth-token:
+        required: true
+        description: TODO
+      github-token:
+        required: true
+        description: The GitHub token used for accessing internal repositories
+jobs:
+  publish-npm:
+    name: Publish protobuf NPM package
+    runs-on: self-hosted
+    steps:
+      - name: Checkout repository
+        # actions/checkout@v4.1.1
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        with:
+          token: ${{ secrets.github-token }}
+          lfs: false
+          submodules: false
+      - name: Prepare package
+        run: |
+          mkdir -p __package/
+          cp api/proto/js/* __package/ -r
+          cp .github/npm/package.json __package/
+          cp .github/npm/package-lock.json __package/
+      - name: Get latest version
+        id: latest_version
+        run: |
+          latest_version=$(npm show @shpeliving/factory-proto version)
+          echo "Latest version: $latest_version"
+          echo "LATEST_VERSION=$latest_version" >> $GITHUB_ENV
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.node-auth-token }}
+      - name: Publish package
+        run: |
+          cd __package
+          if [[ $GITHUB_REF == 'refs/heads/main' ]]; then
+            # split the version string into an array using the "." delimiter
+            IFS='.' read -ra VERSION_ARRAY <<< "$LATEST_VERSION"
+            # increment the minor version by one
+            (( VERSION_ARRAY[1]++ ))
+            # set the patch version to 0
+            VERSION_ARRAY[2]=0
+            echo "${VERSION_ARRAY[0]}.${VERSION_ARRAY[1]}.${VERSION_ARRAY[2]}"
+            # join the version array elements using the "." delimiter
+            new_version=$( IFS='.' ; echo "${VERSION_ARRAY[*]:0:3}" )
+            echo "NEW_VERSION=$new_version" >> $GITHUB_ENV
+            npm version "$new_version" --no-git-tag-version --force --allow-same-version
+            npm publish --access public
+          else
+            branch_name=$(echo ${GITHUB_REF##*/})
+            version_suffix="beta-${branch_name}.${GITHUB_RUN_NUMBER}"
+            npm version "$LATEST_VERSION" --no-git-tag-version --force --allow-same-version
+            published_version=$(npm version prerelease --preid="$version_suffix" --no-git-tag-version --force --allow-same-version)
+            echo $published_version
+            npm publish --tag beta --access public
+            echo "PUBLISHED_VERSION=$published_version" >> $GITHUB_ENV
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.node-auth-token }}
+      - name: Add published version comment
+        if: github.event_name == 'pull_request'
+        # peter-evans/create-or-update-comment@v3.1.0
+        uses: peter-evans/create-or-update-comment@23ff15729ef2fc348714a3bb66d2f655ca9066f2
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ## Published BETA version
+            ### ${{ env.PUBLISHED_VERSION }}
+      - name: Publish UMD
+        run: |
+          cp .github/npm/webpack.config.js __package/
+          cd __package
+          npm ci
+          if [[ $GITHUB_REF == 'refs/heads/main' ]]; then
+            npm run build
+            file_name=./factory-proto.umd-${NEW_VERSION}.js
+            mv ./factory-proto.umd.js ${file_name}
+
+            # Copy dst to bucket
+            gsutil -m cp -r ./${file_name} gs://public-proto-bucket-dev
+          else
+            echo "NONE"
+          fi
