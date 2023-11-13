@@ -65,8 +65,13 @@ jobs:
           touch "${BUILD_DEPLOY_APPS_OUTPUT_FILE}" 
           for APP_FRONTEND_YAML in "${{ inputs.frontends-directory }}"/*/.deployment/frontendapp.yaml; do
             APP_DIRECTORY=${APP_FRONTEND_YAML//\/.deployment\/frontendapp.yaml/}
+          
+            if [[ "${{ inputs.environment }}" == "live" ]]; then
+              echo "${APP_DIRECTORY}" >> "${BUILD_DEPLOY_APPS_OUTPUT_FILE}"
+              continue
+            fi
         
-            if [ "$(grep -ic "${APP_DIRECTORY}" "${CHANGED_DIRECTORIES_FILE}")" -ge 1 ]; then
+            if [[ "$(grep -ic "${APP_DIRECTORY}" "${CHANGED_DIRECTORIES_FILE}")" -ge 1 ]]; then
               echo "${APP_DIRECTORY}" >> "${BUILD_DEPLOY_APPS_OUTPUT_FILE}"
             fi
           done
