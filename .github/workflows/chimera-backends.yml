@@ -34,6 +34,10 @@ on:
         type: string
         required: true
         description: The environment you are about to deploy to (dev or live)
+      build-deploy-all:
+        type: string
+        required: true
+        description: If true, build and deploy all apps
     secrets:
       github-token:
         required: true
@@ -81,6 +85,7 @@ jobs:
           build-apps-output-file: ${{ env.BUILD_APPS_OUTPUT_FILE }}
           deploy-apps-output-file: ${{ env.DEPLOY_APPS_OUTPUT_FILE }}
           environment: ${{ inputs.environment }}
+          build-deploy-all: ${{ inputs.build-deploy-all }}
       - name: Build and push apps
         uses: ./.github/gh-shared-workflows/.github/actions/chimera/build-push-apps
         with:

@@ -22,6 +22,9 @@ inputs:
   environment:
     description: The environment you are about to deploy to (dev or live)
     required: true
+  build-deploy-all:
+    description: If true, build and deploy all apps
+    required: true
 runs:
   using: composite
   steps:
@@ -33,6 +36,7 @@ runs:
           --build-arg=BUILD_APPS_OUTPUT_FILE=${{ inputs.build-apps-output-file }} \
           --build-arg=DEPLOY_APPS_OUTPUT_FILE=${{ inputs.deploy-apps-output-file }} \
           --build-arg=ENVIRONMENT=${{ inputs.environment }} \
+          --build-arg=BUILD_DEPLOY_ALL=${{ inputs.build-deploy-all }} \
           -f "${{ inputs.builder-dockerfile }}" \
           -t "${{ inputs.builder-tag }}" \
           --load \
@@ -46,6 +50,7 @@ runs:
           --build-arg=BUILD_APPS_OUTPUT_FILE=${{ inputs.build-apps-output-file }} \
           --build-arg=DEPLOY_APPS_OUTPUT_FILE=${{ inputs.deploy-apps-output-file }} \
           --build-arg=ENVIRONMENT=${{ inputs.environment }} \
+          --build-arg=BUILD_DEPLOY_ALL=${{ inputs.build-deploy-all }} \
           -f "${{ inputs.builder-dockerfile }}" \
           --target build-deploy-apps-output-file \
           --output type=local,dest=build-deploy-apps-output-file \
