@@ -22,6 +22,9 @@ runs:
     - name: Push
       run: docker push ${{ inputs.image-ref }}
       shell: bash
+    - name: Git pull before git push
+      run: git pull
+      shell: bash
     - name: Update Image Tag
       run: yq eval -i ".image.tag = \"${{ inputs.image-version }}\"" ${{ inputs.values-directory-path || '.deployment/chart' }}/values-${{ inputs.environment }}.yaml
       shell: bash
