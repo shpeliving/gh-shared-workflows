@@ -26,6 +26,10 @@ on:
       image-version:
         required: true
         type: string
+      build-path:
+        required: false
+        type: string
+        default: .
     secrets:
       github-token:
         required: true
@@ -59,6 +63,7 @@ jobs:
           dockerfile: ${{ inputs.dockerfile }}
           custom-image-name: ${{ inputs.custom-image-name }}
           values-directory-path: ${{ inputs.values-directory-path }}
+          build-path: ${{ inputs.build-path }}
       - name: Test Reporter
         uses: ./.github/gh-shared-workflows/.github/actions/golang/test-reporter
         with:
