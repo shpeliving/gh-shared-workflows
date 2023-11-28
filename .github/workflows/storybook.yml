@@ -25,15 +25,15 @@ jobs:
         with:
           token: ${{ secrets.github-token }}
       - name: Retrieve image repository
-        run: echo ::set-output name=IMAGE_REPOSITORY::$(yq eval .image.repository .deployment/chart/values.yaml | sed -e 's/^"//' -e 's/"$//')
+        run: echo IMAGE_REPOSITORY=$(yq eval .image.repository .deployment/chart/values.yaml | sed -e 's/^"//' -e 's/"$//') >> $GITHUB_OUTPUT
         shell: bash
         id: image_repository
       - name: Retrieve image name
-        run: echo ::set-output name=IMAGE_NAME::$(yq eval .image.name .deployment/chart/values.yaml | sed -e 's/^"//' -e 's/"$//')
+        run: echo IMAGE_NAME=$(yq eval .image.name .deployment/chart/values.yaml | sed -e 's/^"//' -e 's/"$//') >> $GITHUB_OUTPUT
         shell: bash
         id: image_name
       - name: Build the image full name
-        run: echo ::set-output name=IMAGE_FULL_NAME::${{ steps.image_repository.outputs.IMAGE_REPOSITORY }}/${{ steps.image_name.outputs.IMAGE_NAME }}:${{ inputs.image-version }}
+        run: echo IMAGE_FULL_NAME=${{ steps.image_repository.outputs.IMAGE_REPOSITORY }}/${{ steps.image_name.outputs.IMAGE_NAME }}:${{ inputs.image-version }} >> $GITHUB_OUTPUT
         shell: bash
         id: image_full_name
       - name: Docker build
