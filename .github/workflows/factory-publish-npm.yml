@@ -81,8 +81,9 @@ jobs:
             file_name=./factory-proto.umd-${NEW_VERSION}.js
             mv ./factory-proto.umd.js ${file_name}
 
-            # Copy dst to bucket
+            # Copy dst to buckets
             gsutil -m cp -r ./${file_name} gs://public-proto-bucket-dev
+            gsutil -m cp -r ./${file_name} gs://public-proto-bucket-prod
           else
             echo "NONE"
           fi
