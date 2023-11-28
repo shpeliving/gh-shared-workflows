@@ -10,6 +10,10 @@ on:
         type: string
         required: true
         description: The directory where the package is built
+      publish-umd:
+        type: string
+        required: true
+        description: If the UMD should be published or not
     secrets:
       node-auth-token:
         required: true
@@ -102,3 +106,4 @@ jobs:
             echo "NONE"
           fi
         shell: bash
+        if: inputs.publish-umd == 'true'
