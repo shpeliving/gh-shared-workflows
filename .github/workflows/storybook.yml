@@ -1,0 +1,71 @@
+name: Build and publish storybook
+on:
+  workflow_call:
+    inputs:
+      image-version:
+        type: string
+        required: true
+        description: The version of the docker image
+      push:
+        required: true
+        type: string
+        description: Should the image be pushed or not (true or false)
+    secrets:
+      github-token:
+        required: true
+        description: The GitHub token used for accessing internal repositories
+jobs:
+  storybook:
+    name: Build and publish storybook
+    runs-on: self-hosted
+    steps:
+      - name: Checkout repository
+        # actions/checkout@v4.1.1
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        with:
+          token: ${{ secrets.github-token }}
+      - name: Retrieve image repository
+        run: echo ::set-output name=IMAGE_REPOSITORY::$(yq eval .image.repository .deployment/chart/values.yaml | sed -e 's/^"//' -e 's/"$//')
+        shell: bash
+        id: image_repository
+      - name: Retrieve image name
+        run: echo ::set-output name=IMAGE_NAME::$(yq eval .image.name .deployment/chart/values.yaml | sed -e 's/^"//' -e 's/"$//')
+        shell: bash
+        id: image_name
+      - name: Build the image full name
+        run: echo ::set-output name=IMAGE_FULL_NAME::${{ steps.image_repository.outputs.IMAGE_REPOSITORY }}/${{ steps.image_name.outputs.IMAGE_NAME }}:${{ inputs.image-version }}
+        shell: bash
+        id: image_full_name
+      - name: Docker build
+        run: docker buildx build --build-arg=GITHUB_TOKEN=${{ secrets.ORGANIZATION_GITHUB_TOKEN }} -f .deployment/docker/Dockerfile -t "${{ steps.image_full_name.outputs.IMAGE_FULL_NAME }}" --load .
+        shell: bash
+      - name: Container Image Vulnerability Scan
+        uses: ./.github/gh-shared-workflows/.github/actions/docker/vulnerability-scan
+        id: docker-vulnerability-scan
+        with:
+          image-ref: ${{ steps.image_full_name.outputs.IMAGE_FULL_NAME }}
+        if: inputs.push != 'true'
+      - name: Security Review Comment
+        uses: ./.github/gh-shared-workflows/.github/actions/comment
+        with:
+          pull-request-number: ${{ github.event.pull_request.number }}
+          golang-security-scan: ":heavy_check_mark:"
+          docker-vulnerability-scan: ${{ steps.docker-vulnerability-scan.outputs.results }}
+          github-token: ${{ secrets.github-token }}
+        if: inputs.push != 'true'
+      - name: Docker push
+        run: docker push "${{ steps.image_full_name.outputs.IMAGE_FULL_NAME }}"
+        shell: bash
+        if: inputs.push == 'true'
+      - name: Update image tag
+        run: yq eval -i ".image.tag = \"${{ inputs.image-version }}\"" .deployment/chart/values.yaml
+        shell: bash
+        if: inputs.push == 'true'
+      - name: Commit image tag update
+        # stefanzweifel/git-auto-commit-action@v4.16.0
+        uses: stefanzweifel/git-auto-commit-action@3ea6ae190baf489ba007f7c92608f33ce20ef04a
+        with:
+          commit_message: Update image tag in dev helm values
+          file_pattern: .deployment/chart/*.yaml
+          branch: main
+        if: inputs.push == 'true'
