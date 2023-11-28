@@ -37,7 +37,7 @@ jobs:
         shell: bash
         id: image_full_name
       - name: Docker build
-        run: docker buildx build --build-arg=GITHUB_TOKEN=${{ secrets.ORGANIZATION_GITHUB_TOKEN }} -f .deployment/docker/Dockerfile -t "${{ steps.image_full_name.outputs.IMAGE_FULL_NAME }}" --load .
+        run: docker buildx build --build-arg=GITHUB_TOKEN=${{ secrets.github-token }} -f .deployment/docker/Dockerfile -t "${{ steps.image_full_name.outputs.IMAGE_FULL_NAME }}" --load .
         shell: bash
       - name: Container Image Vulnerability Scan
         uses: ./.github/gh-shared-workflows/.github/actions/docker/vulnerability-scan
