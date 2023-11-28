@@ -89,7 +89,7 @@ jobs:
       - name: Publish UMD
         run: |
           if [[ $GITHUB_REF == 'refs/heads/main' ]]; then
-            cd build
+            cd ${{ inputs.build-directory }}
             npm run build:umd
 
             file_name=./${{ inputs.package-name }}.umd-${NEW_VERSION}.js
