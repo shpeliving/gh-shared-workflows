@@ -24,6 +24,15 @@ jobs:
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
         with:
           token: ${{ secrets.github-token }}
+      - name: Checkout GitHub Shared Repository
+        # actions/checkout@v4.1.1
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        with:
+          repository: shpeliving/gh-shared-workflows
+          token: ${{ secrets.github-token }}
+          path: .github/gh-shared-workflows
+          # TODO: tag this later
+          ref: main
       - name: Retrieve image repository
         run: echo IMAGE_REPOSITORY=$(yq eval .image.repository .deployment/chart/values.yaml | sed -e 's/^"//' -e 's/"$//') >> $GITHUB_OUTPUT
         shell: bash
