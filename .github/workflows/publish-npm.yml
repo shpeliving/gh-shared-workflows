@@ -14,6 +14,11 @@ on:
         type: string
         required: true
         description: If the UMD should be published or not
+      publish-umd-folder:
+        type: string
+        required: false
+        default: false
+        description: If the UMD is folder that should be published or not (ignores publish-umd if true)
     secrets:
       node-auth-token:
         required: true
@@ -106,4 +111,20 @@ jobs:
             echo "NONE"
           fi
         shell: bash
-        if: inputs.publish-umd == 'true'
+        if: inputs.publish-umd == 'true' && inputs.publish-umd-folder == 'false'
+      - name: Publish UMD Folder
+        run: |
+          if [[ $GITHUB_REF == 'refs/heads/main' ]]; then
+            npm run build:umd
+            cd ${{ inputs.build-directory }}
+
+            build_dir=./umd
+
+            # Copy dst to bucket
+            gsutil -m cp -r ${build_dir}/* gs://public-proto-bucket-dev/${{ inputs.package-name }}/${NEW_VERSION}
+            gsutil -m cp -r ${build_dir}/* gs://public-proto-bucket-prod/${{ inputs.package-name }}/${NEW_VERSION}
+          else
+            echo "NONE"
+          fi
+        shell: bash
+        if: inputs.publish-umd-folder == 'true'
