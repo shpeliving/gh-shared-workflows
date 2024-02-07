@@ -95,7 +95,7 @@ jobs:
           while IFS= read -r APP_DIRECTORY; do
             cd "${APP_DIRECTORY}"
             echo "${{ inputs.env-file-content }}" > .env.local
-            echo -e "\nFIREBASE_CONFIG=${{ secrets.firebase-config }}" >> .env.local
+            echo -e "\nVITE_FIREBASE_CONFIG=${{ secrets.firebase-config }}" >> .env.local
             npm install
             if [[ ${{ inputs.run-tests }} == true ]]; then
               npm run test
@@ -106,7 +106,7 @@ jobs:
         shell: bash
         env:
           NODE_AUTH_TOKEN: ${{ secrets.node-auth-token }}
-          FIREBASE_CONFIG: ${{ secrets.firebase-config }}
+          VITE_FIREBASE_CONFIG: ${{ secrets.firebase-config }}
       - name: Deploy frontend apps
         run: chimera-fe-deploy-apps.sh "${BUILD_DEPLOY_APPS_OUTPUT_FILE}" "${{ inputs.environment }}" "${{ inputs.version }}" "${{ inputs.upload-bucket }}" "${{ secrets.github-token }}"
         shell: bash
