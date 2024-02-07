@@ -95,6 +95,7 @@ jobs:
           while IFS= read -r APP_DIRECTORY; do
             cd "${APP_DIRECTORY}"
             echo "${{ inputs.env-file-content }}" > .env.local
+            echo -e "\nFIREBASE_CONFIG=${{ secrets.firebase-config }}" >> .env.local
             npm install
             if [[ ${{ inputs.run-tests }} == true ]]; then
               npm run test
