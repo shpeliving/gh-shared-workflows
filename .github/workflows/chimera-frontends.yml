@@ -41,6 +41,9 @@ on:
       github-token:
         required: true
         description: The GitHub token used for accessing internal repositories
+      firebase-config:
+        required: false
+        description: Firebase config if needed by the application
 env:
   CHANGED_DIRECTORIES_FILE: changed-directories
   BUILD_DEPLOY_APPS_OUTPUT_FILE: build-deploy-apps
@@ -102,6 +105,7 @@ jobs:
         shell: bash
         env:
           NODE_AUTH_TOKEN: ${{ secrets.node-auth-token }}
+          FIREBASE_CONFIG: ${{ secrets.firebase-config }}
       - name: Deploy frontend apps
         run: chimera-fe-deploy-apps.sh "${BUILD_DEPLOY_APPS_OUTPUT_FILE}" "${{ inputs.environment }}" "${{ inputs.version }}" "${{ inputs.upload-bucket }}" "${{ secrets.github-token }}"
         shell: bash
