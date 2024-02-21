@@ -27,11 +27,11 @@ on:
         required: true
         description: The environment you are about to deploy to (dev or live)
       run-tests:
-        type: boolean
+        type: string
         required: false
         description: Whether to run tests or not
       skip-deploy:
-        type: boolean
+        type: string
         required: false
         description: Whether to skip the deploy step or not
     secrets:
@@ -97,7 +97,7 @@ jobs:
             echo "${{ inputs.env-file-content }}" > .env.local
             echo -e "\nVITE_FIREBASE_CONFIG=${{ secrets.firebase-config }}" >> .env.local
             npm install
-            if [[ ${{ inputs.run-tests }} == true ]]; then
+            if [[ ${{ inputs.run-tests }} == 'true' ]]; then
               npm run test
             fi
             npm run build
