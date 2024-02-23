@@ -29,10 +29,12 @@ on:
       run-tests:
         type: string
         required: false
+        default: "false"
         description: Whether to run tests or not
       skip-deploy:
         type: string
         required: false
+        default: "false"
         description: Whether to skip the deploy step or not
     secrets:
       node-auth-token:
