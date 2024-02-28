@@ -123,7 +123,7 @@ jobs:
         uses: ataylorme/eslint-annotate-action@v2
         with:
           report-json: "./**/eslint_report.json"
-          only-pr-files: true
+          only-pr-files: false
           markdown-report-on-step-summary: true
         if: inputs.run-linting == 'true'
       - name: Deploy frontend apps
