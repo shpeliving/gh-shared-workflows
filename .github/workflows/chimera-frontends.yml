@@ -40,12 +40,12 @@ on:
         type: string
         required: false
         default: "false"
-        description: Whether to run linting or not
+        description: Whether to run linting or not. It uses npm run lint script from the package.json.
       linting-error-on-warning:
         type: string
         required: false
         default: "false"
-        description: Whether to run linting or not
+        description: If true, the action will fail if there are any warnings in the linting report.
     secrets:
       node-auth-token:
         required: true
