@@ -4,6 +4,12 @@ inputs:
   github-token:
     description: The GitHub token used for accessing internal repositories
     required: true
+  manifest-file:
+    description: The manifest file (e.g. backendapp.yaml or generatorapp.yaml)
+    required: true
+  default-app-dockerfile:
+    required: true
+    description: The path to the default app Dockerfile
   build-apps-output-file:
     description: Build apps output file
     required: true
@@ -17,5 +23,5 @@ runs:
   using: composite
   steps:
     - name: Build and push apps
-      run: chimera-build-push-apps.sh ${{ inputs.build-apps-output-file }} ${{ inputs.image-repository }} ${{ inputs.image-version }} ${{ inputs.github-token }}
+      run: operator-build-push-apps.sh ${{ inputs.default-app-dockerfile }} ${{ inputs.manifest-file }} ${{ inputs.build-apps-output-file }} ${{ inputs.image-repository }} ${{ inputs.image-version }} ${{ inputs.github-token }}
       shell: bash

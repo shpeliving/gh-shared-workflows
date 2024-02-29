@@ -4,6 +4,12 @@ inputs:
   github-token:
     description: The GitHub token used for accessing internal repositories
     required: true
+  apps-directory:
+    description: The directory where the apps sit
+    required: true
+  manifest-file:
+    description: The manifest file (e.g. backendapp.yaml or generatorapp.yaml)
+    required: true
   builder-dockerfile:
     description: The path to the builder Dockerfile
     required: true
@@ -32,6 +38,8 @@ runs:
       run: |
         docker buildx build \
           --build-arg=GITHUB_TOKEN=${{ inputs.github-token }} \
+          --build-arg=APPS_DIRECTORY=${{ inputs.apps-directory }} \
+          --build-arg=MANIFEST_FILE=${{ inputs.manifest-file }} \
           --build-arg=CHANGED_DIRECTORIES_FILE=${{ inputs.changed-directories-file }} \
           --build-arg=BUILD_APPS_OUTPUT_FILE=${{ inputs.build-apps-output-file }} \
           --build-arg=DEPLOY_APPS_OUTPUT_FILE=${{ inputs.deploy-apps-output-file }} \
@@ -46,6 +54,8 @@ runs:
       run: |
         docker buildx build \
           --build-arg=GITHUB_TOKEN=${{ inputs.github-token }} \
+          --build-arg=APPS_DIRECTORY=${{ inputs.apps-directory }} \
+          --build-arg=MANIFEST_FILE=${{ inputs.manifest-file }} \
           --build-arg=CHANGED_DIRECTORIES_FILE=${{ inputs.changed-directories-file }} \
           --build-arg=BUILD_APPS_OUTPUT_FILE=${{ inputs.build-apps-output-file }} \
           --build-arg=DEPLOY_APPS_OUTPUT_FILE=${{ inputs.deploy-apps-output-file }} \

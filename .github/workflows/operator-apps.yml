@@ -1,4 +1,4 @@
-name: Chimera build and deploy backends
+name: Operator build and deploy apps
 on:
   workflow_call:
     inputs:
@@ -10,14 +10,22 @@ on:
         type: string
         description: The expected builder tag
         required: true
+      default-app-dockerfile:
+        type: string
+        required: true
+        description: The path to the default app Dockerfile
       source-directories:
         type: string
         required: true
         description: The directories which affect the building process (they are used for sparse checkout)
-      backends-directory:
+      apps-directory:
         type: string
         required: true
-        description: The directory to scan for backend apps (should be included in source-directories)
+        description: The directory to scan for apps (should be included in source-directories)
+      manifest-file:
+        type: string
+        required: true
+        description: The manifest file (e.g. backendapp.yaml or generatorapp.yaml)
       image-repository:
         type: string
         required: true
@@ -76,9 +84,11 @@ jobs:
         run: echo "${{ steps.changed-files.outputs.all_changed_files }}" > ${CHANGED_DIRECTORIES_FILE}
         shell: bash
       - name: Build builder image
-        uses: ./.github/gh-shared-workflows/.github/actions/chimera/build-builder
+        uses: ./.github/gh-shared-workflows/.github/actions/operator/build-builder
         with:
           github-token: ${{ secrets.github-token }}
+          apps-directory: ${{ inputs.apps-directory }}
+          manifest-file: ${{ inputs.manifest-file }}
           builder-dockerfile: ${{ inputs.builder-dockerfile }}
           builder-tag: ${{ inputs.builder-tag }}
           changed-directories-file: ${{ env.CHANGED_DIRECTORIES_FILE }}
@@ -87,16 +97,20 @@ jobs:
           environment: ${{ inputs.environment }}
           build-deploy-all: ${{ inputs.build-deploy-all }}
       - name: Build and push apps
-        uses: ./.github/gh-shared-workflows/.github/actions/chimera/build-push-apps
+        uses: ./.github/gh-shared-workflows/.github/actions/operator/build-push-apps
         with:
           github-token: ${{ secrets.github-token }}
+          manifest-file: ${{ inputs.manifest-file }}
+          default-app-dockerfile: ${{ inputs.default-app-dockerfile }}
           build-apps-output-file: ${{ env.BUILD_APPS_OUTPUT_FILE }}
           image-repository: ${{ inputs.image-repository }}
           image-version: ${{ inputs.image-version }}
       - name: Deploy apps
-        uses: ./.github/gh-shared-workflows/.github/actions/chimera/deploy-apps
+        uses: ./.github/gh-shared-workflows/.github/actions/operator/deploy-apps
         with:
           github-token: ${{ secrets.github-token }}
+          manifest-file: ${{ inputs.manifest-file }}
+          default-app-dockerfile: ${{ inputs.default-app-dockerfile }}
           deploy-apps-output-file: ${{ env.DEPLOY_APPS_OUTPUT_FILE }}
           image-repository: ${{ inputs.image-repository }}
           image-version: ${{ inputs.image-version }}
