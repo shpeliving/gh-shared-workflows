@@ -73,7 +73,7 @@ jobs:
         shell: bash
       - name: Build frontend app
         run: |
-          cd "${inputs.frontend-directory}"
+          cd "${{ inputs.frontend-directory }}"
           echo "${{ inputs.env-file-content }}" > .env.local
           echo -e "\nVITE_FIREBASE_CONFIG=${{ secrets.firebase-config }}" >> .env.local
           npm install
@@ -100,6 +100,6 @@ jobs:
         if: inputs.run-linting == 'true'
       - name: Deploy frontend app
         run: |
-          chimera-fe-deploy-app.sh "${inputs.frontend-directory}" "${inputs.frontendapp-deployment-file}" "${{ inputs.environment }}" "${{ inputs.version }}" "${{ inputs.upload-bucket }}" "${{ secrets.github-token }}"
+          chimera-fe-deploy-app.sh "${{ inputs.frontend-directory }}" "${{ inputs.frontendapp-deployment-file }}" "${{ inputs.environment }}" "${{ inputs.version }}" "${{ inputs.upload-bucket }}" "${{ secrets.github-token }}"
         shell: bash
         if: inputs.skip-deploy != 'true'
