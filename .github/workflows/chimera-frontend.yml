@@ -1,0 +1,105 @@
+name: Chimera build and deploy frontend
+on:
+  workflow_call:
+    inputs:
+      frontend-directory:
+        type: string
+        required: true
+        description: The directory of the frontend app
+      frontendapp-deployment-file:
+        type: string
+        required: true
+        description: The frontendapp deployment file of the frontend app (e.g. frontendapp.yaml)
+        default: frontendapp.yaml
+      env-file-content:
+        type: string
+        required: true
+        description: The content of the env file
+      version:
+        type: string
+        required: true
+        description: The version of the web app that is going to be released by this flow
+      upload-bucket:
+        type: string
+        required: true
+        description: The google cloud storage bucket, where the artifact will be uploaded
+      environment:
+        type: string
+        required: true
+        description: The environment you are about to deploy to (dev or live)
+      run-tests:
+        type: string
+        required: false
+        default: "false"
+        description: Whether to run tests or not
+      skip-deploy:
+        type: string
+        required: false
+        default: "false"
+        description: Whether to skip the deploy step or not
+      run-linting:
+        type: string
+        required: false
+        default: "false"
+        description: Whether to run linting or not. It uses npm run lint script from the package.json.
+      linting-error-on-warning:
+        type: string
+        required: false
+        default: "false"
+        description: If true, the action will fail if there are any warnings in the linting report.
+    secrets:
+      node-auth-token:
+        required: true
+        description: The npm token used for accessing the internal shpeliving repositories
+      github-token:
+        required: true
+        description: The GitHub token used for accessing internal repositories
+      firebase-config:
+        required: false
+        description: Firebase config if needed by the application
+jobs:
+  build-deploy-app:
+    name: Build and deploy app
+    runs-on: self-hosted
+    steps:
+      - name: Checkout repository
+        # actions/checkout@v4.1.1
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        with:
+          token: ${{ secrets.github-token }}
+          sparse-checkout: ${{ inputs.frontend-directory }}
+      - name: Setup ssh to use GitHub token (npm)
+        run: git config --global url."https://${{ secrets.github-token }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+        shell: bash
+      - name: Build frontend app
+        run: |
+          cd "${inputs.frontend-directory}"
+          echo "${{ inputs.env-file-content }}" > .env.local
+          echo -e "\nVITE_FIREBASE_CONFIG=${{ secrets.firebase-config }}" >> .env.local
+          npm install
+          if [[ ${{ inputs.run-tests }} == 'true' ]]; then
+            npm run test
+          fi
+          if [[ ${{ inputs.run-linting }} == 'true' ]]; then
+            npm run lint
+            npm run lint:report
+          fi
+
+          npm run build
+        shell: bash
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.node-auth-token }}
+          VITE_FIREBASE_CONFIG: ${{ secrets.firebase-config }}
+      - name: Annotate Code Linting Results
+        uses: ataylorme/eslint-annotate-action@v2
+        with:
+          report-json: "./**/eslint_report.json"
+          only-pr-files: false
+          markdown-report-on-step-summary: true
+          fail-on-warning: inputs.linting-error-on-warning == 'true'
+        if: inputs.run-linting == 'true'
+      - name: Deploy frontend app
+        run: |
+          chimera-fe-deploy-app.sh "${inputs.frontend-directory}" "${inputs.frontendapp-deployment-file}" "${{ inputs.environment }}" "${{ inputs.version }}" "${{ inputs.upload-bucket }}" "${{ secrets.github-token }}"
+        shell: bash
+        if: inputs.skip-deploy != 'true'
