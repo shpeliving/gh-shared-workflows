@@ -80,7 +80,6 @@ jobs:
           path: /tmp/tests-junit.xml
           reporter: java-junit
           fail-on-error: 'true'
-          token: ${{ secrets.github-token }}
       - name: Coverage Reporter
         # fgrosse/go-coverage-report@v1.0.2
         uses: fgrosse/go-coverage-report@ff33f0f3f96d20ecb97198100852d2af288094ff
