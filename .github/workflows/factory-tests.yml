@@ -1,11 +1,7 @@
-name: Factory test backends
+name: Factory - Run Tests
 on:
   workflow_call:
     inputs:
-      working-directory:
-        type: string
-        required: true
-        description: The working directory where to clone the repo
       bucket-names:
         type: string
         required: true
@@ -19,26 +15,22 @@ on:
         required: true
         description: The GitHub token used for accessing internal repositories
 jobs:
-  test-apps:
-    name: Test apps
+  run-tests:
+    name: Run Tests
     runs-on: self-hosted
     steps:
-      - name: Checkout repository
-        # actions/checkout@v4.1.1
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+      - name: Checkout Repository
+        # actions/checkout@v4.1.7
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
         with:
-          path: ${{ inputs.working-directory }}
           token: ${{ secrets.github-token }}
-      - name: Setup go to use GitHub token
-        run: |
-          git config --global url."https://${{ secrets.github-token }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
-          go env -w GOPRIVATE=github.com/shpeliving/*
+      - name: Setup Access to Private Repositories
+        run: git config --global url."https://${{ secrets.github-token }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
         shell: bash
-      - name: Download modules
-        working-directory: ${{ inputs.working-directory }}
+      - name: Download Modules
         run: go mod download
         shell: bash
-      - name: Start emulators
+      - name: Start Emulators
         run: |
           buckets.sh
           watchdog > /tmp/watchdog.log 2>&1 &
@@ -50,37 +42,52 @@ jobs:
           BUCKET_NAMES: ${{ inputs.bucket-names }}
           DEFAULT_GCP_PROJECT: ${{ inputs.project-id }}
           WATCHDOG_SKIP_HARD_KILL: 1
-      - name: Run unit tests
-        working-directory: ${{ inputs.working-directory }}
-        run: >
-          SHPE_UNIT_TEST=1
-          go test ./... -v -count 1 2>&1 | grep -v "no test files" | tee /tmp/testoutput.log
+      - name: Run Tests
+        run: gotestsum --format github-actions --junitfile /tmp/tests-junit.xml -- -cover -coverprofile=/tmp/tests-cover.out ./...
         shell: bash
-      - name: Prepare junit report
+      - name: Prepare Coverage Report
         if: always()
-        run: cat /tmp/testoutput.log | go-junit-report -set-exit-code > /tmp/report.xml
+        run: go tool cover -html=/tmp/tests-cover.out -o /tmp/tests-cover.html
         shell: bash
-      - name: Display junit report
+      - name: Upload Tests JUnit XML File
+        # actions/upload-artifact@v4.3.4
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b
         if: always()
-        run: cat /tmp/testoutput.log
-        shell: bash
-      - name: Test summary
-        # test-summary/action@v2.1
-        uses: test-summary/action@62bc5c68de2a6a0d02039763b8c754569df99e3f
         with:
-          paths: |
-            /tmp/report.xml
+          name: tests-junit
+          path: /tmp/tests-junit.xml
+          if-no-files-found: ignore
+      - name: Upload Tests Coverage HTML File
+        # actions/upload-artifact@v4.3.4
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b
         if: always()
-      - name: Test report
-        # dorny/test-reporter@v1.7.0
-        uses: dorny/test-reporter@afe6793191b75b608954023a46831a3fe10048d4
+        with:
+          name: tests-coverage
+          path: /tmp/tests-cover.html
+          if-no-files-found: ignore
+      - name: Tests Summary
+        # test-summary/action@v2.4
+        uses: test-summary/action@31493c76ec9e7aa675f1585d3ed6f1da69269a86
+        if: always()
+        with:
+          paths: "/tmp/tests-junit.xml"
+      - name: Tests Reporter
+        # dorny/test-reporter@v1.9.1
+        uses: dorny/test-reporter@31a54ee7ebcacc03a09ea97a7e5465a47b84aea5
         if: always()
         with:
           name: Factory Tests Result
-          path: /tmp/report.xml
-          working-directory: ${{ inputs.working-directory }}
+          path: /tmp/tests-junit.xml
           reporter: java-junit
           fail-on-error: 'true'
+# Takes too long to run
+#      - name: Coverage Reporter
+#        # fgrosse/go-coverage-report@v1.0.2
+#        uses: fgrosse/go-coverage-report@ff33f0f3f96d20ecb97198100852d2af288094ff
+#        if: always()
+#        with:
+#          coverage-artifact-name: tests-coverage
+#          coverage-file-name: tests-cover.out
       - name: Stop emulators
         if: always()
         run: ps axu | grep watchdog | grep -v grep | awk '{print $2}' | xargs kill -SIGINT || true
