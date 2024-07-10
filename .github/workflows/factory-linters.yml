@@ -1,0 +1,68 @@
+name: Factory - Run Linters
+on:
+  workflow_call:
+    secrets:
+      github-token:
+        required: true
+        description: The GitHub token used for accessing internal repositories
+jobs:
+  run-tests:
+    name: Run Linters
+    runs-on: self-hosted
+    steps:
+      - name: Checkout Repository
+        # actions/checkout@v4.1.7
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+        with:
+          token: ${{ secrets.github-token }}
+      - name: Setup Access to Private Repositories
+        run: git config --global url."https://${{ secrets.github-token }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+        shell: bash
+      - name: Download Modules
+        run: go mod download
+        shell: bash
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.59.1
+      - name: Check Generators Manifest Cache
+        run: |
+          for GENERATOR_DIR in generator/*/*; do
+            cd ${GENERATOR_DIR}
+            go run . register operator
+            cd -
+          done
+
+          git diff -w --quiet generator
+          if [ $? -ne 0 ]; then
+            echo "Changes detected, generators manifest cache must be regenerated"
+            exit 1
+          fi
+
+          exit 0
+        shell: bash
+      - name: Check go.mod For Consistency
+        run: |
+          GO_MOD_DIRS=(. generator/*/* wasm)
+          for GO_MOD_DIR in ${GO_MOD_DIRS}; do
+            cd ${GO_MOD_DIR}
+
+            go mod tidy
+
+            git diff -w --quiet go.mod
+            if [ $? -ne 0 ]; then
+              echo "${GO_MOD_DIR}/go.mod is inconsistent"
+              exit 1
+            fi
+
+            git diff -w --quiet go.sum
+            if [ $? -ne 0 ]; then
+              echo "${GO_MOD_DIR}/go.sum is inconsistent"
+              exit 1
+            fi
+
+            cd -
+          done
+
+          exit 0
+        shell: bash
