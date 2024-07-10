@@ -33,7 +33,8 @@ jobs:
             cd -
           done
 
-          if git diff -w --quiet generator; then
+          git diff -w --quiet generator
+          if [ $? -ne 0 ]; then
             echo "Changes detected, generators manifest cache must be regenerated"
             exit 1
           fi
@@ -48,12 +49,14 @@ jobs:
 
             go mod tidy
 
-            if git diff -w --quiet go.mod; then
+            git diff -w --quiet go.mod
+            if [ $? -ne 0 ]; then
               echo "${GO_MOD_DIR}/go.mod is inconsistent"
               exit 1
             fi
 
-            if git diff -w --quiet go.sum; then
+            git diff -w --quiet go.sum
+            if [ $? -ne 0 ]; then
               echo "${GO_MOD_DIR}/go.sum is inconsistent"
               exit 1
             fi
