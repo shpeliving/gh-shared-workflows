@@ -80,17 +80,14 @@ jobs:
           path: /tmp/tests-junit.xml
           reporter: java-junit
           fail-on-error: 'true'
-      - name: Coverage Reporter
-        # fgrosse/go-coverage-report@v1.0.2
-        uses: fgrosse/go-coverage-report@ff33f0f3f96d20ecb97198100852d2af288094ff
-        if: always()
-        with:
-          coverage-file-name: /tmp/tests-cover.out
-          name: Factory Tests Result
-          path: /tmp/tests-junit.xml
-          reporter: java-junit
-          fail-on-error: 'true'
-          token: ${{ secrets.github-token }}
+# Takes too long to run
+#      - name: Coverage Reporter
+#        # fgrosse/go-coverage-report@v1.0.2
+#        uses: fgrosse/go-coverage-report@ff33f0f3f96d20ecb97198100852d2af288094ff
+#        if: always()
+#        with:
+#          coverage-artifact-name: tests-coverage
+#          coverage-file-name: tests-cover.out
       - name: Stop emulators
         if: always()
         run: ps axu | grep watchdog | grep -v grep | awk '{print $2}' | xargs kill -SIGINT || true
