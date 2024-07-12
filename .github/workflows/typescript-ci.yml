@@ -1,0 +1,64 @@
+name: TypeScript - Continuous Integration
+on:
+  workflow_call:
+    inputs:
+      base-directory:
+        type: string
+        required: false
+        default: .
+        description: Directory of the project, if using monorepo
+      with-build:
+        type: string
+        required: false
+        default: true
+        description: Should build be executed. Possibly turn off, if npm package is published or not needed
+      with-build-umd:
+        type: string
+        required: false
+        default: false
+        description: Should build UMD be executed. Possibly turn off, if npm package is published or not needed
+      with-tests:
+        type: string
+        required: false
+        default: true
+        description: Should tests be run. You might want to set to false, if project has no tests
+    secrets:
+      node-auth-token:
+        required: true
+        description: The npm token used for accessing the internal shpeliving repositories
+      github-token:
+        required: true
+        description: The GitHub token used for accessing internal repositories
+jobs:
+  typescript-ci:
+    name: TypeScript - Continuous Integration
+    runs-on: self-hosted
+    steps:
+      - name: Checkout repository
+        # actions/checkout@v4.1.7
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+        with:
+          token: ${{ secrets.github-token }}
+      - name: Install dependencies
+        run: cd "${{ inputs.base-directory }}" && npm ci
+        shell: bash
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.node-auth-token }}
+      - name: Run Linters
+        run: cd "${{ inputs.base-directory }}" && npm run lint
+        shell: bash
+      - name: Build
+        run: |
+          cd "${{ inputs.base-directory }}" && npm run build
+        shell: bash
+        if: inputs.with-build == 'true'
+      - name: Build
+        run: |
+          cd "${{ inputs.base-directory }}" && npm run build:umd
+        shell: bash
+        if: inputs.with-build == 'true'
+      - name: Run Tests
+        run: |
+          cd "${{ inputs.base-directory }}" && npm run test
+        shell: bash
+        if: inputs.with-tests == 'true'
