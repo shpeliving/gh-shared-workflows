@@ -97,10 +97,10 @@ jobs:
           edit-mode: replace
       - name: Publish UMD
         run: |
-          cd ${{ inputs.build-directory }}
-          npm run build:umd
-
           if [[ $GITHUB_REF == 'refs/heads/main' ]]; then
+            cd ${{ inputs.build-directory }}
+            npm run build:umd
+
             file_name=./${{ inputs.package-name }}.umd-${NEW_VERSION}.js
             mv ./${{ inputs.package-name }}.umd.js ${file_name}
 
@@ -114,10 +114,10 @@ jobs:
         if: inputs.publish-umd == 'true' && inputs.publish-umd-folder == 'false'
       - name: Publish UMD Folder
         run: |
-          npm run build:umd
-          cd ${{ inputs.build-directory }}
-
           if [[ $GITHUB_REF == 'refs/heads/main' ]]; then
+            npm run build:umd
+            cd ${{ inputs.build-directory }}
+
             build_dir=./umd
 
             # Copy dst to bucket
