@@ -56,7 +56,7 @@ jobs:
         run: |
           cd "${{ inputs.base-directory }}" && npm run build:umd
         shell: bash
-        if: inputs.with-build == 'true'
+        if: inputs.with-build-umd == 'true'
       - name: Run Tests
         run: |
           cd "${{ inputs.base-directory }}" && npm run test
