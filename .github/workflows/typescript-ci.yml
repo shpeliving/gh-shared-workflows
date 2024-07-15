@@ -68,4 +68,5 @@ jobs:
         with:
           name: test-results
           path: ${{ inputs.base-directory }}/coverage
-        if: inputs.with-tests == 'true'
+          if-no-files-found: ignore
+        if: always() && inputs.with-tests == 'true'
