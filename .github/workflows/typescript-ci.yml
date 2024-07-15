@@ -59,6 +59,13 @@ jobs:
         if: inputs.with-build-umd == 'true'
       - name: Run Tests
         run: |
-          cd "${{ inputs.base-directory }}" && npm run test
+          cd "${{ inputs.base-directory }}" && npm run test:ci
         shell: bash
+        if: inputs.with-tests == 'true'
+      - name: Upload Test Results
+        # actions/upload-artifact@v4.3.4
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b
+        with:
+          name: test-results
+          path: ${{ inputs.base-directory }}/coverage
         if: inputs.with-tests == 'true'
