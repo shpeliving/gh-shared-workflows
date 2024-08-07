@@ -1,6 +1,11 @@
 name: Factory - Run Linters
 on:
   workflow_call:
+    inputs:
+      lint-directories:
+        type: string
+        required: true
+        description: The directories where the linters should be run against
     secrets:
       github-token:
         required: true
@@ -25,6 +30,7 @@ jobs:
         uses: golangci/golangci-lint-action@v6
         with:
           version: v1.59.1
+          args: ${{ inputs.lint-directories }}
       - name: Check Generators Manifest Cache
         run: |
           for GENERATOR_DIR in generator/*/*; do
