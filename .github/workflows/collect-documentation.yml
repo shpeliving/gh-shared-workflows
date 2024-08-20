@@ -57,19 +57,25 @@ jobs:
 
           echo "Starting to process docs..."
           # Loop through the array to build the metadata JSON
-          for file_info in $(echo "$docs" | jq -c '.[]'); do
+          while IFS= read -r file_info; do
             echo "Processing file_info: $file_info"
-            file_path=$(echo "$file_info" | jq -r '.filePath' | sed 's/^\.\///')  # Remove leading "./"
-            file_name=$(basename $file_path)
+
+            # Extract values using jq
+            file_path=$(echo "$file_info" | jq -r '.filePath')
+            file_name=$(basename "$file_path")
+
             echo "File path: $file_path, File name: $file_name"
+
             file_url="https://github.com/$origin_repository/blob/main/$file_path"
             echo "Constructed file URL: $file_url"
-            breadcrumbs=$(echo "$file_info" | jq -r '.breadcrumbs')
+
+            breadcrumbs=$(echo "$file_info" | jq -c '.breadcrumbs')
             echo "Breadcrumbs: $breadcrumbs"
-          
+
             # Add this file's metadata to the overall metadata JSON
-            metadata=$(echo $metadata | jq --arg file_name "$file_name" --arg file_url "$file_url" --argjson breadcrumbs "$breadcrumbs" '. + {($file_name): {"filePath": $file_url, "breadcrumbs": $breadcrumbs}}')
-          done
+            metadata=$(echo "$metadata" | jq --arg file_name "$file_name" --arg file_url "$file_url" --argjson breadcrumbs "$breadcrumbs" '. + {($file_name): {"filePath": $file_url, "breadcrumbs": $breadcrumbs}}')
+            echo "Updated metadata JSON: $metadata"
+          done < <(echo "$docs" | jq -c '.[]')
 
           # Construct the curl command with metadata and files
           curl_cmd="curl --location --silent --output /dev/null --write-out '%{http_code}' 'https://devs.infra.nabr.com/api/v1/documents/add?appName=$app_name' --header 'Authorization: Bearer $OAUTH_TOKEN' --request POST --max-time 90 --form 'metadata=$metadata'"
