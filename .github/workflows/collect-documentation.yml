@@ -61,7 +61,7 @@ jobs:
             echo "Processing file_info: $file_info"
 
             # Extract values using jq
-            file_path=$(echo "$file_info" | jq -r '.filePath')
+            file_path=$(echo "$file_info" | jq -r '.filePath' | sed 's/^\.\///')  # Remove leading "./")
             file_name=$(basename "$file_path")
 
             echo "File path: $file_path, File name: $file_name"
