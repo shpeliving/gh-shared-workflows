@@ -1,0 +1,96 @@
+name: Collect documentation
+
+on:
+  workflow_call:
+    inputs:
+      docs:
+        description: 'JSON array of objects with relative file paths and breadcrumbs'
+        required: true
+        type: string
+      app_name:
+        description: 'Application name'
+        required: true
+        type: string
+      repository:
+        description: 'The origin repository where the workflow was triggered'
+        required: true
+        type: string
+      branch:
+        description: 'The branch on which the documents are in'
+        required: false
+        type: string
+        default: 'main'
+    secrets:
+      DEVS_PORTAL_IAP_AUD:
+        description: 'The developers portal IAP client id'
+        required: true
+
+jobs:
+  collect-documentation:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Authenticate and Obtain OAuth 2.0 Token
+        id: obtain-oauth-token
+        run: |
+          # Use gcloud to obtain an OAuth 2.0 token with the correct audience
+          IAP_CLIENT_ID="${{ secrets.DEVS_PORTAL_IAP_AUD }}"  # The client ID for your IAP resource
+          OAUTH_TOKEN=$(gcloud auth print-identity-token --audiences=$IAP_CLIENT_ID)
+
+          echo "OAUTH_TOKEN=$OAUTH_TOKEN" >> $GITHUB_ENV
+
+      - name: Build and Send Request to Devs Portal
+        run: |
+          # Parse the JSON input
+          echo "Parsing inputs..."
+          docs='${{ inputs.docs }}'
+          app_name='${{ inputs.app_name }}'
+          origin_repository='${{ inputs.repository }}'
+
+          echo "Received docs:"
+          echo "$docs"
+
+          metadata="{}"
+
+          echo "Starting to process docs..."
+          # Loop through the array to build the metadata JSON
+          for file_info in $(echo "$docs" | jq -c '.[]'); do
+            echo "Processing file_info: $file_info"
+            file_path=$(echo "$file_info" | jq -r '.filePath' | sed 's/^\.\///')  # Remove leading "./"
+            file_name=$(basename $file_path)
+            echo "File path: $file_path, File name: $file_name"
+            file_url="https://github.com/$origin_repository/blob/main/$file_path"
+            echo "Constructed file URL: $file_url"
+            breadcrumbs=$(echo "$file_info" | jq -r '.breadcrumbs')
+            echo "Breadcrumbs: $breadcrumbs"
+          
+            # Add this file's metadata to the overall metadata JSON
+            metadata=$(echo $metadata | jq --arg file_name "$file_name" --arg file_url "$file_url" --argjson breadcrumbs "$breadcrumbs" '. + {($file_name): {"filePath": $file_url, "breadcrumbs": $breadcrumbs}}')
+          done
+
+          # Construct the curl command with metadata and files
+          curl_cmd="curl --location --silent --output /dev/null --write-out '%{http_code}' 'https://devs.infra.nabr.com/api/v1/documents/add?appName=$app_name' --header 'Authorization: Bearer $OAUTH_TOKEN' --request POST --max-time 90 --form 'metadata=$metadata'"
+
+          # Add each file to the curl command
+          for file_info in $(echo "$docs" | jq -c '.[]'); do
+            file_path=$(echo "$file_info" | jq -r '.filePath')
+            curl_cmd="$curl_cmd --form 'files=@\"$file_path\"'"
+          done
+
+          # Debug: Output the curl command
+          echo "REQUEST: $curl_cmd"
+
+          # Execute the curl command and capture the response
+          status_code=$(eval $curl_cmd)
+          
+          # Output the response for debugging
+          echo "Status code: $status_code"
+          
+          # Fail the workflow if the status code is not 200
+          if [ "$status_code" -ne 200 ]; then
+            echo "Request failed with status code $status_code"
+            exit 1
+          fi
