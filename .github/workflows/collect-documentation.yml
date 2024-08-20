@@ -56,6 +56,7 @@ jobs:
           metadata="{}"
 
           echo "Starting to process docs..."
+          declare -a file_maps=()
           # Loop through the array to build the metadata JSON
           while IFS= read -r file_info; do
             echo "Processing file_info: $file_info"
@@ -64,6 +65,9 @@ jobs:
             file_path=$(echo "$file_info" | jq -r '.filePath' | sed 's/^\.\///')  # Remove leading "./")
             file_name=$(basename "$file_path")
             base64_key=$(echo -n "$file_path" | base64 | tr -d '=' | tr '/+' '_-')
+
+            # Create the map (JSON object) and add it to the array
+            file_maps+=("{\"$base64_key\": \"$file_path\"}")
 
             echo "File path: $file_path, File name: $file_name"
 
@@ -77,6 +81,9 @@ jobs:
             metadata=$(echo $metadata | jq --arg base64_key "$base64_key" --arg file_url "$file_url" --argjson breadcrumbs "$breadcrumbs" '. + {($base64_key): {"filePath": $file_url, "breadcrumbs": $breadcrumbs}}')
           done < <(echo "$docs" | jq -c '.[]')
 
+          echo "Final metadata:"
+          echo $metadata
+
           # Construct the curl command with metadata and files
           curl_cmd="curl --location --silent --output /dev/null --write-out '%{http_code}' 'https://devs.infra.nabr.com/api/v1/documents/add?appName=$app_name' \
             --header 'Authorization: Bearer $OAUTH_TOKEN' \
@@ -86,10 +93,12 @@ jobs:
             --form 'metadata=$metadata'"
 
           # Add each file to the curl command
-          for file_info in $(echo "$docs" | jq -c '.[]'); do
-            file_path=$(echo "$file_info" | jq -r '.filePath')
-            base64_key=$(echo -n "$file_path" | base64 | tr -d '=' | tr '/+' '_-')
-            curl_cmd="$curl_cmd --form 'files=@\"$file_path\";filename=\"$base64_key\"'"
+          for file_map in "${file_maps[@]}"; do
+            base64_key=$(echo "$file_map" | jq -r 'keys[]')
+            file_path=$(echo "$file_map" | jq -r '.[]')
+          
+            # Adjust the quotes in the --form option
+            curl_cmd="$curl_cmd --form 'files=@\"$file_path\";filename=$base64_key'"
           done
 
           # Debug: Output the curl command
