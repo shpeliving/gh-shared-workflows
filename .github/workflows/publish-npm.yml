@@ -17,8 +17,13 @@ on:
       publish-umd-folder:
         type: string
         required: false
-        default: false
+        default: "false"
         description: If the UMD is folder that should be published or not (ignores publish-umd if true)
+      run-tests:
+        type: string
+        required: false
+        default: "false"
+        description: Whether to run tests or not
     secrets:
       node-auth-token:
         required: true
@@ -41,6 +46,10 @@ jobs:
         shell: bash
         env:
           NODE_AUTH_TOKEN: ${{ secrets.node-auth-token }}
+      - name: Run tests
+        run: npm run test
+        shell: bash
+        if: inputs.run-tests == 'true'
       - name: Build package
         run: npm run build:package
         shell: bash
