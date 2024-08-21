@@ -11,7 +11,7 @@ on:
         required: true
         description: The GitHub token used for accessing internal repositories
 jobs:
-  run-tests:
+  factory-linters:
     name: Run Linters
     runs-on: self-hosted
     steps:
