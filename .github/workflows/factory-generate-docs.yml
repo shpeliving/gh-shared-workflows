@@ -13,7 +13,7 @@ on:
 env:
   DOCS_REPOSITORY_PATH: docs-repository
 jobs:
-  publish-npm:
+  factory-generate-docs:
     name: Generate docs
     runs-on: self-hosted
     steps:
