@@ -97,7 +97,11 @@ jobs:
           only-pr-files: false
           markdown-report-on-step-summary: true
           fail-on-warning: inputs.linting-error-on-warning == 'true'
-        if: inputs.run-linting == 'true'
+        if: inputs.run-linting == 'true' && github.actor != 'dependabot[bot]'
+      - name: Run Linting
+        run: npm run lint
+        shell: bash
+        if: inputs.run-linting == 'true' && github.actor == 'dependabot[bot]'
       - name: Deploy frontend app
         run: |
           chimera-fe-deploy-app.sh "${{ inputs.frontend-directory }}" "${{ inputs.frontendapp-deployment-file }}" "${{ inputs.environment }}" "${{ inputs.version }}" "${{ inputs.upload-bucket }}" "${{ secrets.github-token }}"
