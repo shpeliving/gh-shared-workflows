@@ -95,7 +95,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.node-auth-token }}
       - name: Add published version comment
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
         # peter-evans/create-or-update-comment@v3.1.0
         uses: peter-evans/create-or-update-comment@23ff15729ef2fc348714a3bb66d2f655ca9066f2
         with:
