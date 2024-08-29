@@ -33,7 +33,7 @@ jobs:
           version: v1.60.3
           install-mode: none
           skip-cache: true
-          args: ${{ inputs.lint-directories }}
+          args: --timeout=3m ${{ inputs.lint-directories }}
       - name: Check Generators Manifest Cache
         run: |
           for GENERATOR_DIR in generator/*/*; do
