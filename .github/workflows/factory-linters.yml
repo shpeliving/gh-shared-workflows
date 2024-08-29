@@ -52,7 +52,7 @@ jobs:
         shell: bash
       - name: Check go.mod For Consistency
         run: |
-          GO_MOD_DIRS=(. generator/*/* wasm)
+          GO_MOD_DIRS=". generator/*/* wasm"
           for GO_MOD_DIR in ${GO_MOD_DIRS}; do
             echo "Checking ${GO_MOD_DIR}/go.mod for consistency"
             cd ${GO_MOD_DIR}
