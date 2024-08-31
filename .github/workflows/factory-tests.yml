@@ -63,6 +63,7 @@ jobs:
       - name: Prepare Coverage Report
         if: always()
         run: go tool cover -html=/tmp/tests-cover.out -o /tmp/tests-cover.html
+        working-directory: ${{ inputs.main-directory }}
         shell: bash
       - name: Upload Tests JUnit XML File
         # actions/upload-artifact@v4.3.4
