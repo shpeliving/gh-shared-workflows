@@ -41,6 +41,7 @@ jobs:
         shell: bash
       - name: Download Modules
         run: go mod download
+        working-directory: ${{ inputs.main-directory }}
         shell: bash
       - name: Start Emulators
         run: |
