@@ -4,12 +4,14 @@ on:
     inputs:
       bucket-names:
         type: string
-        required: true
-        description: The GCP buckets that are going to be created
+        required: false
+        description: The GCP buckets that are going to be created, required if with-emulators is true
+        default: ""
       project-id:
         type: string
-        required: true
-        description: The default GCP project
+        required: false
+        description: The default GCP project, required if with-emulators is true
+        default: ""
       with-emulators:
         type: string
         required: false
