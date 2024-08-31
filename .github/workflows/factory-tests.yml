@@ -15,6 +15,11 @@ on:
         required: false
         description: Start the emulators or not
         default: "true"
+      main-directory:
+        type: string
+        required: false
+        description: The main directory of the project
+        default: "."
     secrets:
       github-token:
         required: true
@@ -50,6 +55,7 @@ jobs:
         if: inputs.with-emulators == 'true'
       - name: Run Tests
         run: gotestsum --format github-actions --junitfile /tmp/tests-junit.xml -- -cover -coverprofile=/tmp/tests-cover.out ./...
+        working-directory: ${{ inputs.main-directory }}
         shell: bash
       - name: Prepare Coverage Report
         if: always()
