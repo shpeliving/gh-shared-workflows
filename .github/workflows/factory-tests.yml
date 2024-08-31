@@ -10,6 +10,11 @@ on:
         type: string
         required: true
         description: The default GCP project
+      with-emulators:
+        type: string
+        required: false
+        description: Start the emulators or not
+        default: "true"
     secrets:
       github-token:
         required: true
@@ -42,6 +47,7 @@ jobs:
           BUCKET_NAMES: ${{ inputs.bucket-names }}
           DEFAULT_GCP_PROJECT: ${{ inputs.project-id }}
           WATCHDOG_SKIP_HARD_KILL: 1
+        if: inputs.with-emulators == 'true'
       - name: Run Tests
         run: gotestsum --format github-actions --junitfile /tmp/tests-junit.xml -- -cover -coverprofile=/tmp/tests-cover.out ./...
         shell: bash
@@ -89,7 +95,7 @@ jobs:
 #          coverage-artifact-name: tests-coverage
 #          coverage-file-name: tests-cover.out
       - name: Stop emulators
-        if: always()
+        if: always() && inputs.with-emulators == 'true'
         run: ps axu | grep watchdog | grep -v grep | awk '{print $2}' | xargs kill -SIGINT || true
         shell: bash
         continue-on-error: true
