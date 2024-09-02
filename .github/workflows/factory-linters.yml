@@ -24,7 +24,16 @@ jobs:
         run: git config --global url."https://${{ secrets.github-token }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
         shell: bash
       - name: Download Modules
-        run: go mod download
+        run: |
+          go mod download
+
+          for GENERATOR_DIR in generator/*/*; do
+            cd ${GENERATOR_DIR}
+            go mod download
+            cd -
+          done
+
+          exit 0
         shell: bash
       - name: Run golangci-lint
         # golangci/golangci-lint-action@v6.1.0
