@@ -75,7 +75,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.node-auth-token }}
       - name: Publish package
         run: |
-          cd ${{ inputs.package-directory }}${{ inputs.build-directory }}
+          cd ${{ inputs.package-directory }}/${{ inputs.build-directory }}
 
           json_tmp=`cat package.json`
           jq '.name = "@shpeliving/${{ inputs.package-name }}"' <<< $json_tmp > package.json
