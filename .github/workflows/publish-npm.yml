@@ -6,10 +6,15 @@ on:
         type: string
         required: true
         description: The npm package name (the name is automatically prefixed with "@shpeliving/")
+      package-directory:
+        type: string
+        required: false
+        default: "."
+        description: The directory where the package is located, usually the root of the repository, but in some cases it can be different
       build-directory:
         type: string
         required: true
-        description: The directory where the package is built
+        description: The directory where the package is built. The parameter is based on the package directory, which default is the root of the repository
       publish-umd:
         type: string
         required: true
@@ -42,16 +47,22 @@ jobs:
         with:
           token: ${{ secrets.github-token }}
       - name: Install dependencies
-        run: npm ci
+        run: |
+          cd ${{ inputs.package-directory }}
+          npm ci
         shell: bash
         env:
           NODE_AUTH_TOKEN: ${{ secrets.node-auth-token }}
       - name: Run tests
-        run: npm run test
+        run: |
+          cd ${{ inputs.package-directory }}
+          npm run test
         shell: bash
         if: inputs.run-tests == 'true'
       - name: Build package
-        run: npm run build:package
+        run: |
+          cd ${{ inputs.package-directory }}
+          npm run build:package
         shell: bash
       - name: Get latest package version
         id: latest_version
@@ -64,7 +75,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.node-auth-token }}
       - name: Publish package
         run: |
-          cd ${{ inputs.build-directory }}
+          cd ${{ inputs.package-directory }}${{ inputs.build-directory }}
 
           json_tmp=`cat package.json`
           jq '.name = "@shpeliving/${{ inputs.package-name }}"' <<< $json_tmp > package.json
@@ -106,6 +117,7 @@ jobs:
           edit-mode: replace
       - name: Publish UMD
         run: |
+          cd ${{ inputs.package-directory }}
           if [[ $GITHUB_REF == 'refs/heads/main' ]]; then
             cd ${{ inputs.build-directory }}
             npm run build:umd
@@ -123,6 +135,7 @@ jobs:
         if: inputs.publish-umd == 'true' && inputs.publish-umd-folder == 'false'
       - name: Publish UMD Folder
         run: |
+          cd ${{ inputs.package-directory }}
           if [[ $GITHUB_REF == 'refs/heads/main' ]]; then
             npm run build:umd
             cd ${{ inputs.build-directory }}
