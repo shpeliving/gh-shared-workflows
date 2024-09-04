@@ -113,7 +113,7 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
             ## Published BETA version
-            ### ${{ env.PUBLISHED_VERSION }}
+            ### ${{ inputs.package-name }} ${{ env.PUBLISHED_VERSION }}
           edit-mode: replace
       - name: Publish UMD
         run: |
