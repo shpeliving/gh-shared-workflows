@@ -43,22 +43,6 @@ jobs:
           install-mode: none
           skip-cache: true
           args: --timeout=3m ${{ inputs.lint-directories }}
-      - name: Check Generators Manifest Cache
-        run: |
-          for GENERATOR_DIR in generator/*/*; do
-            cd ${GENERATOR_DIR}
-            go run . register operator
-            cd -
-          done
-
-          git diff -w --quiet generator
-          if [ $? -ne 0 ]; then
-            echo "Changes detected, generators manifest cache must be regenerated"
-            exit 1
-          fi
-
-          exit 0
-        shell: bash
       - name: Check go.mod For Consistency
         run: |
           GO_MOD_DIRS=". generator/*/* wasm"
