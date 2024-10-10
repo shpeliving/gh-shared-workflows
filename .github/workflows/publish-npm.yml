@@ -24,6 +24,11 @@ on:
         required: false
         default: "false"
         description: If the UMD is folder that should be published or not (ignores publish-umd if true)
+      umd-package-root:
+        type: string
+        required: false
+        default: "false"
+        description: If we should create an UMD package of root folder or the 'package-directory'
       run-tests:
         type: string
         required: false
@@ -124,8 +129,15 @@ jobs:
         run: |
           cd ${{ inputs.package-directory }}
           if [[ $GITHUB_REF == 'refs/heads/main' ]]; then
+            if [[ "${{ inputs.umd-package-root }}" == 'true' ]]; then
+              npm run build:umd
+            fi
+
             cd ${{ inputs.build-directory }}
-            npm run build:umd
+
+            if [[ "${{ inputs.umd-package-root }}" != 'true' ]]; then
+              npm run build:umd
+            fi
 
             file_name=./${{ inputs.package-name }}.umd-${NEW_VERSION}.js
             mv ./${{ inputs.package-name }}.umd.js ${file_name}
@@ -142,8 +154,15 @@ jobs:
         run: |
           cd ${{ inputs.package-directory }}
           if [[ $GITHUB_REF == 'refs/heads/main' ]]; then
-            npm run build:umd
+            if [[ "${{ inputs.umd-package-root }}" == 'true' ]]; then
+              npm run build:umd
+            fi
+
             cd ${{ inputs.build-directory }}
+
+            if [[ "${{ inputs.umd-package-root }}" != 'true' ]]; then
+              npm run build:umd
+            fi
 
             build_dir=./umd
 
