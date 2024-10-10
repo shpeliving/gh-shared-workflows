@@ -67,8 +67,13 @@ jobs:
       - name: Get latest package version
         id: latest_version
         run: |
-          LATEST_PACKAGE_VERSION=$(npm show @shpeliving/${{ inputs.package-name }} version)
-          echo "Latest version: ${LATEST_PACKAGE_VERSION}"
+          LATEST_PACKAGE_VERSION=$(npm show @shpeliving/${{ inputs.package-name }} version || true)
+          if [ -z "$LATEST_PACKAGE_VERSION" ]; then
+            echo "No existing package version found. Defaulting to 0.1.0."
+            LATEST_PACKAGE_VERSION="0.1.0"
+          else
+            echo "Latest version: ${LATEST_PACKAGE_VERSION}"
+          fi
           echo "LATEST_VERSION=${LATEST_PACKAGE_VERSION}" >> $GITHUB_ENV
         shell: bash
         env:
