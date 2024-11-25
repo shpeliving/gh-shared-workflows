@@ -30,20 +30,14 @@ defaults:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    name: Build and publish Nuget package
+    runs-on: self-hosted
     steps:
       - name: Checkout repository
         # actions/checkout@v4.1.1
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
         with:
           token: ${{ secrets.github-token }}
-
-      # - name: Setup .NET
-      #   uses: actions/setup-dotnet@v1
-      #   with:
-      #     dotnet-version: "8.0.x"
-      - name: Setup .NET
-        uses: ./.github/gh-shared-workflows/.github/actions/docker/build
 
       - name: Restore dependencies
         run: dotnet restore ${{ inputs.package-directory }}
