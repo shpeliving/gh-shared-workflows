@@ -1,0 +1,90 @@
+name: Publish Nuget package
+on:
+  workflow_call:
+    inputs:
+      package-name:
+        type: string
+        required: true
+        description: The nuget package name
+      package-directory:
+        type: string
+        required: false
+        default: "."
+        description: The directory where the package is located
+      nuget-url:
+        type: string
+        required: false
+        default: "https://nuget.pkg.github.com/shpeliving"
+        description: The nuget feed URL, defaults to the internal shpeliving feed
+    secrets:
+      nuget-api-key:
+        required: true
+        description: The nuget API key used for publishing the package
+      github-token:
+        required: true
+        description: The GitHub token used for accessing internal repositories
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: Build and publish Nuget package
+    runs-on: self-hosted
+    steps:
+      - name: Checkout repository
+        # actions/checkout@v4.1.1
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        with:
+          token: ${{ secrets.github-token }}
+
+      - name: Restore dependencies
+        run: dotnet restore ${{ inputs.package-directory }}
+
+      - name: Build
+        run: dotnet build ${{ inputs.package-directory }} --configuration Release --no-restore
+
+      - name: Get latest version
+        id: get_version
+        run: |
+          PACKAGE_ID="${{ inputs.package-name }}"
+          URL="${{ inputs.nuget-url }}/query"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+          RESPONSE=$(curl -s -H "Authorization: Bearer ${{ secrets.nuget-api-key }}" $URL)
+          VERSION=$(echo $RESPONSE | jq -r --arg PACKAGE_ID "$PACKAGE_ID" '.data[] | select(.id == $PACKAGE_ID) | .version')
+
+          if [ -z "$VERSION" ]; then
+            echo "Package not found"
+            exit 1
+          fi
+
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Increment version and publish
+        env:
+          VERSION: ${{ env.VERSION }}
+          GITHUB_SHA_SHORT: ${{ github.sha }}
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            NEW_VERSION=$(echo $VERSION | awk -F. -v OFS=. '{$2+=1; $3="0-beta-'${GITHUB_SHA_SHORT:0:7}'"; print}')
+          else
+            NEW_VERSION=$(echo $VERSION | awk -F. -v OFS=. '{$2+=1; $3="0"; print}')
+          fi
+          dotnet pack ${{ inputs.package-directory }} --configuration Release /p:PackageVersion=$NEW_VERSION
+          dotnet nuget push ${{ inputs.package-directory }}/bin/Release/*.nupkg --source ${{ inputs.nuget-url }}/index.json --api-key ${{ secrets.nuget-api-key }}
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+
+      - name: Write comment with new version
+        run: echo "New version is $NEW_VERSION"
+      - name: Add published version comment
+        if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
+        # peter-evans/create-or-update-comment@v3.1.0
+        uses: peter-evans/create-or-update-comment@23ff15729ef2fc348714a3bb66d2f655ca9066f2
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ## Published BETA version
+            ### ${{ inputs.package-name }} ${{ env.NEW_VERSION }}
+          edit-mode: replace
