@@ -16,10 +16,13 @@ on:
         required: false
         default: "https://nuget.pkg.github.com/shpeliving/"
         description: The nuget feed URL, defaults to the internal shpeliving feed
+    secrets:
       nuget-api-key:
-        type: string
         required: true
         description: The nuget API key used for publishing the package
+      github-token:
+        required: true
+        description: The GitHub token used for accessing internal repositories
 
 defaults:
   run:
@@ -29,8 +32,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Checkout repository
+        # actions/checkout@v4.1.1
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        with:
+          token: ${{ secrets.github-token }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v1
