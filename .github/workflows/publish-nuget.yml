@@ -21,6 +21,10 @@ on:
         required: true
         description: The nuget API key used for publishing the package
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   build:
     runs-on: ubuntu-latest
