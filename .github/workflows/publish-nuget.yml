@@ -14,7 +14,7 @@ on:
       nuget-url:
         type: string
         required: false
-        default: "https://nuget.pkg.github.com/shpeliving/"
+        default: "https://nuget.pkg.github.com/shpeliving"
         description: The nuget feed URL, defaults to the internal shpeliving feed
     secrets:
       nuget-api-key:
